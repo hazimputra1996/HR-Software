@@ -1,0 +1,4 @@
+/* Hide all notes with 'sortspec' in the file name */
+.nav-file-title[data-path*="sortspec"] {
+    display: none;
+}

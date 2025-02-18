@@ -1,0 +1,27 @@
+package com.hr_software_project.hr_management.service;
+
+import com.hr_software_project.hr_management.dto.CreateLeaveRequestDTO;
+import com.hr_software_project.hr_management.dto.CreateUserRequestDTO;
+import com.hr_software_project.hr_management.dto.LeaveBalanceDTO;
+import com.hr_software_project.hr_management.dto.UpdateLeaveRequestDTO;
+import com.hr_software_project.hr_management.entity.LeaveDO;
+import com.hr_software_project.hr_management.entity.UserDO;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+
+@Service
+public interface LeaveService {
+
+
+    LeaveDO getLeaveDetail(Long currentUserId, Long leaveId);
+    LeaveDO create(CreateLeaveRequestDTO req);
+    LeaveDO update(UpdateLeaveRequestDTO req);
+    List<LeaveDO> getAllLeaveByUser(Long currentUserId);
+
+    List<LeaveDO> getAllLeaveFilterByStatus(Long currentUserId, String status);
+    List<LeaveBalanceDTO> getLeaveBalance(Long currentUserId);
+
+
+}

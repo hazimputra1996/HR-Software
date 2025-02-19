@@ -7,8 +7,8 @@ import java.util.Date;
 @Component
 public class JwtTokenUtil {
 
-    private String secretKey = "yourSecretKey";  // Change to a strong secret key
-    private long expirationTime = 1000 * 60 * 60 * 10;  // Token expiration time (10 hours)
+    private String secretKey = "2760bedb5f9fc1865dc1a24734e03104";  // Change to a strong secret key
+    private long expirationTime = 1000 * 60 * 60 * 2;  // Token expiration time (2 hours)
 
     // Generate JWT Token
     public String generateToken(String username) {

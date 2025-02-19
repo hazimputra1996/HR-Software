@@ -22,6 +22,8 @@ public class OvertimeDO {
     private UserDO user;
 
     private Date overtimeDate;
+    private Date startTime;
+    private Date endTime;
     private Double hoursWorked;
     private Double overtimeRate;
     private Double totalOvertime;

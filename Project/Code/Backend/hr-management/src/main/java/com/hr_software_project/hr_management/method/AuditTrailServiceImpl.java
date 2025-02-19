@@ -1,11 +1,15 @@
 package com.hr_software_project.hr_management.method;
 
+import com.hr_software_project.hr_management.dto.CreateAuditTrailRequestDTO;
 import com.hr_software_project.hr_management.dto.CreateLeaveRequestDTO;
 import com.hr_software_project.hr_management.dto.LeaveBalanceDTO;
 import com.hr_software_project.hr_management.dto.UpdateLeaveRequestDTO;
+import com.hr_software_project.hr_management.entity.AuditTrailDO;
 import com.hr_software_project.hr_management.entity.LeaveCarryForwardDO;
 import com.hr_software_project.hr_management.entity.LeaveDO;
+import com.hr_software_project.hr_management.repository.AuditTrailRepository;
 import com.hr_software_project.hr_management.repository.LeaveRepository;
+import com.hr_software_project.hr_management.service.AuditTrailService;
 import com.hr_software_project.hr_management.service.LeaveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,42 +20,22 @@ import java.util.List;
 
 @Transactional
 @Service
-public class LeaveServiceImpl implements LeaveService {
+public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Autowired
-    private LeaveRepository leaveRepository;
+    private AuditTrailRepository auditTrailRepository;
 
-    public LeaveDO getLeaveDetail(Long currentUserId, Long leaveId){
+    public List<AuditTrailDO> getAuditTrailAll(Long currentUserId){
         return null;
     }
 
-    public LeaveDO create(CreateLeaveRequestDTO req){
+    public List<AuditTrailDO> getAuditTrailForUser(Long currentUserId, Long userId){
         return null;
     }
 
-    public LeaveDO update(UpdateLeaveRequestDTO req){
+    public AuditTrailDO createAuditTrail(CreateAuditTrailRequestDTO req){
         return null;
     }
-
-    public List<LeaveDO> getAllLeaveByUser(Long currentUserId){
-        return null;
-    }
-
-    public List<LeaveDO> getAllLeaveFilterByStatus(Long currentUserId, String status){
-        return null;
-    }
-
-    public List<LeaveBalanceDTO> getLeaveBalance(Long currentUserId){
-        return null;
-    }
-
-    public List<LeaveCarryForwardDO> carryForwardLeave(Long currentUserId, Long userId, Integer year){
-        return null;
-    }
-    public List<LeaveCarryForwardDO> getLeaveCarryForwardByYear(Long currentUserId, Long userId, Integer year){
-        return null;
-    }
-
 
 
 }

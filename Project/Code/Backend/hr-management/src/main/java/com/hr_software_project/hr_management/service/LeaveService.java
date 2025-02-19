@@ -4,6 +4,7 @@ import com.hr_software_project.hr_management.dto.CreateLeaveRequestDTO;
 import com.hr_software_project.hr_management.dto.CreateUserRequestDTO;
 import com.hr_software_project.hr_management.dto.LeaveBalanceDTO;
 import com.hr_software_project.hr_management.dto.UpdateLeaveRequestDTO;
+import com.hr_software_project.hr_management.entity.LeaveCarryForwardDO;
 import com.hr_software_project.hr_management.entity.LeaveDO;
 import com.hr_software_project.hr_management.entity.UserDO;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,8 @@ public interface LeaveService {
 
     List<LeaveDO> getAllLeaveFilterByStatus(Long currentUserId, String status);
     List<LeaveBalanceDTO> getLeaveBalance(Long currentUserId);
+    List<LeaveCarryForwardDO> carryForwardLeave(Long currentUserId, Long userId, Integer year);
+    List<LeaveCarryForwardDO> getLeaveCarryForwardByYear(Long currentUserId, Long userId, Integer year);
 
 
 }

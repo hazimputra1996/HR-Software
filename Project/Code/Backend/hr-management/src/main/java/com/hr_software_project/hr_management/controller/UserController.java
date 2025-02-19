@@ -15,17 +15,6 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-//    @PostMapping("/register")
-//    public UserDO registerUser(@RequestBody UserDO user) {
-//        return userService.save(user);
-//    }
-
-//    @PostMapping("/login")
-//    public String loginUser(@RequestBody LoginRequest loginRequest) {
-//        // Check credentials and return JWT token
-//    }
-
-
     @GetMapping("/getUserDetailByEmail")
     public UserDO getUserByEmail(
             @RequestParam String email,

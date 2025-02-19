@@ -3,6 +3,7 @@ package com.hr_software_project.hr_management.controller;
 import com.hr_software_project.hr_management.dto.CreateLeaveRequestDTO;
 import com.hr_software_project.hr_management.dto.LeaveBalanceDTO;
 import com.hr_software_project.hr_management.dto.UpdateLeaveRequestDTO;
+import com.hr_software_project.hr_management.entity.LeaveCarryForwardDO;
 import com.hr_software_project.hr_management.entity.LeaveDO;
 import com.hr_software_project.hr_management.service.LeaveService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,22 @@ public class LeaveController {
     public List<LeaveBalanceDTO> getLeaveBalance(
             @RequestParam Long currentUserId) {
         return leaveService.getLeaveBalance(currentUserId);
+    }
+
+    @PostMapping("/carryForwardLeave")
+    public List<LeaveCarryForwardDO> carryForwardLeave(
+            @RequestParam Long currentUserId,
+            @RequestParam Long userId,
+            @RequestParam Integer year) {
+        return leaveService.carryForwardLeave(currentUserId, userId, year);
+    }
+
+    @GetMapping("/getLeaveCarryForwardByYear")
+    public List<LeaveCarryForwardDO> getLeaveCarryForwardByYear(
+            @RequestParam Long currentUserId,
+            @RequestParam Long userId,
+            @RequestParam Integer year) {
+        return leaveService.getLeaveCarryForwardByYear(currentUserId, userId, year);
     }
 
 

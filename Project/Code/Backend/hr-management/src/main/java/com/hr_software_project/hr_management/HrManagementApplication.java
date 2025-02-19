@@ -2,8 +2,10 @@ package com.hr_software_project.hr_management;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
+@EnableJpaRepositories
 public class HrManagementApplication {
 
 	public static void main(String[] args) {

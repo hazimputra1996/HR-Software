@@ -22,31 +22,31 @@ public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
 	public ResponseEntity<Object> handleCoreException(ServiceException e) {
 		final ErrorCase errorCase = e.getErrorCase();
 		if(e!=null && errorCase.getErrorCode()==201 && errorCase.getErrorMessage().equalsIgnoreCase("Empty list")) {
-			
+
 			return buildResponseEntity(new ErrorResponse(ResponseStatusEnum.CREATED).fromErrorCase(errorCase));
-			 
+
 		}
-		
+
 		return buildResponseEntity(new ErrorResponse(ResponseStatusEnum.EXPECTED_ERROR).fromErrorCase(errorCase));
 
 	}
 	private ResponseEntity<Object> buildResponseEntity(ErrorResponse apiError) {
 
 		if(apiError!=null && apiError.getErrorCode()==201 && apiError.getErrorMessage().equalsIgnoreCase("Empty list")) {
-			
+
 			 return new ResponseEntity<>(apiError, HttpStatus.CREATED);
-			 
+
 		}
 	       return new ResponseEntity<>(apiError, HttpStatus.FORBIDDEN);
 	   }
 
-	@ExceptionHandler(Exception.class)
-	public ServiceResponse handleGenericException(final Exception e) {
-		LOGGER.error(e.toString());
-		LOGGER.error("**********1 **********Fatal Exception Stacktrace \n", e);
-
-		return new ErrorResponse(ResponseStatusEnum.GENERIC_ERROR).fromErrorCase(ServiceErrorCodes.SYSTEM_ERROR);
-	}
+//	@ExceptionHandler(Exception.class)
+//	public ServiceResponse handleGenericException(final Exception e) {
+//		LOGGER.error(e.toString());
+//		LOGGER.error("**********1 **********Fatal Exception Stacktrace \n", e);
+//
+//		return new ErrorResponse(ResponseStatusEnum.GENERIC_ERROR).fromErrorCase(ServiceErrorCodes.SYSTEM_ERROR);
+//	}
 
 
 	@ExceptionHandler(RuntimeException.class)
@@ -57,7 +57,7 @@ public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
 		return new ErrorResponse(ResponseStatusEnum.GENERIC_ERROR).fromErrorCase(ServiceErrorCodes.SYSTEM_ERROR);
 
 	}
-	
+
 	@ExceptionHandler(DataNotFoundException.class)
 	public ResponseEntity<Object> handleDataNotFoundException(final DataNotFoundException e) {
 		final ErrorCase errorCase = e.getErrorCase();
@@ -74,7 +74,7 @@ public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
 		final ErrorResponse response =new ErrorResponse(ResponseStatusEnum.GENERIC_ERROR,ServiceErrorCodes.SYSTEM_ERROR.getErrorMessage(),HttpStatus.OK);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
-	
-	
+
+
 
 }

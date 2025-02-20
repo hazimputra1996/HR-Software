@@ -9,7 +9,9 @@ import lombok.*;
 @Setter
 @Data
 public class CreateUserRequestDTO {
-    private String name;
+    private String firstName;
+    private String lastName;
+    private String username;
     private String email;
     private String password;
     private String role;

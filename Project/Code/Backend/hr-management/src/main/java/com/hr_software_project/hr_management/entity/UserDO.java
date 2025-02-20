@@ -19,7 +19,8 @@ public class UserDO {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String first_name;
+    private String last_name;
     private String username;
 
     @Column(unique = true, nullable = false)
@@ -32,18 +33,16 @@ public class UserDO {
     private Role role; // ADMIN, EMPLOYEE, SUPERVISOR
 
     private Double salary;
-    private String epfNumber;
-    private String socsoNumber;
-    private String incomeTaxNumber;
-    private Date hireDate;
+    private String epf_number;
+    private String socso_number;
+    private String income_tax_number;
+    private Date hire_date;
 
-    private Integer leaveBalance = 0;
+    private Integer leave_balance = 0;
 
     @ManyToOne
     @JoinColumn(name = "supervisor_id")
     private UserDO supervisor;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<LeaveDO> leaves;
 
 }

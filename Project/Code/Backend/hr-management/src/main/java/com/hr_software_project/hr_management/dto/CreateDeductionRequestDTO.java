@@ -3,8 +3,6 @@ package com.hr_software_project.hr_management.dto;
 
 import lombok.*;
 
-import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

@@ -1,7 +1,5 @@
 package com.hr_software_project.hr_management.constant;
 
-import java.util.*;
-
 public class Constants {
         public static final String DEFAULT_DATA_TIME_ZONE = "GMT";//when converting from date -> timestamp
         public static final String ROLE_ADMIN = "ADMIN";

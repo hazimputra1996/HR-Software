@@ -4,7 +4,6 @@ import com.hr_software_project.hr_management.dto.*;
 import com.hr_software_project.hr_management.entity.*;
 import com.hr_software_project.hr_management.repository.UserRepository;
 import com.hr_software_project.hr_management.service.PayrollService;
-import com.hr_software_project.hr_management.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -5,7 +5,6 @@ import lombok.*;
 import com.hr_software_project.hr_management.enums.Role;
 
 import java.util.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "users")

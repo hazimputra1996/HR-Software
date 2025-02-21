@@ -6,7 +6,8 @@ public enum ServiceErrorCodes implements ErrorCase {
     EMAIL_EXISTS(409, ErrorMessages.getCode("email.409")),
     USERNAME_EXISTS(409, ErrorMessages.getCode("username.409")),
     UNAUTHORIZED(401, ErrorMessages.getCode("unauthorized.401")),
-    SUPERVISOR_NOT_EXISTS(404, ErrorMessages.getCode("supervisor.404"));
+    SUPERVISOR_NOT_EXISTS(404, ErrorMessages.getCode("supervisor.404")),
+    WRONG_DATE_FORMAT(403, ErrorMessages.getCode("wrong_date.403")),;
 
     private int errorCode;
     private String errorMessage;

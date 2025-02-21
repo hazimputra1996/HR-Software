@@ -18,10 +18,10 @@ public interface LeaveService {
 
     LeaveDO getLeaveDetail(Long currentUserId, Long leaveId);
     LeaveDO create(CreateLeaveRequestDTO req);
-    LeaveDO update(UpdateLeaveRequestDTO req);
+    LeaveDO update(LeaveDO req, Long currentUserId);
     List<LeaveDO> getAllLeaveByUser(Long currentUserId);
 
-    List<LeaveDO> getAllLeaveFilterByStatus(Long currentUserId, String status);
+    List<LeaveDO> getAllLeaveFilterByStatus(Long currentUserId, String status, Boolean allUser);
     List<LeaveBalanceDTO> getLeaveBalance(Long currentUserId);
     List<LeaveCarryForwardDO> carryForwardLeave(Long currentUserId, Long userId, Integer year);
     List<LeaveCarryForwardDO> getLeaveCarryForwardByYear(Long currentUserId, Long userId, Integer year);

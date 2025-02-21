@@ -33,8 +33,9 @@ public class LeaveController {
     }
 
     @PutMapping("/updateLeave")
-    public LeaveDO updateLeave(@RequestBody UpdateLeaveRequestDTO req) {
-        return leaveService.update(req);
+    public LeaveDO updateLeave(@RequestBody LeaveDO req,
+                               @RequestParam Long currentUserId) {
+        return leaveService.update(req, currentUserId);
     }
 
     @GetMapping("/getAllLeaveByUser")
@@ -46,8 +47,9 @@ public class LeaveController {
     @GetMapping("/getAllLeaveFilterByStatus")
     public List<LeaveDO> getAllLeaveFilterByStatus(
             @RequestParam Long currentUserId,
-            @RequestParam String status) {
-        return leaveService.getAllLeaveFilterByStatus(currentUserId, status);
+            @RequestParam String status,
+            @RequestParam Boolean allUser) {
+        return leaveService.getAllLeaveFilterByStatus(currentUserId, status, allUser);
     }
 
     @GetMapping("/getLeaveBalance")

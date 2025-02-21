@@ -33,19 +33,6 @@ public class OpenAPI30Configuration {
                                 .bearerFormat("JWT")));
     }
 
-    // configure UI to collapse all modules on default
-    @Bean
-    public SwaggerUiConfigParameters swaggerUiConfigParameters() {
-        SwaggerUiConfigProperties properties = new SwaggerUiConfigProperties();
-        properties.setDocExpansion("NONE"); // default collapse all tags
-        properties.setTagsSorter("alpha"); // sort tags alphabetically
-        properties.setDefaultModelExpandDepth(99); // expand fully all models/schema
-        properties.setDefaultModelRendering("false");
-
-        SwaggerUiConfigParameters parameters = new SwaggerUiConfigParameters(properties);
-        return parameters;
-    }
-
     // since actuator info will read build-info.properties and serialize the time to json, it has issues
     // hence include this for proper datetime conversion.
     // REMOVE IF CAUSING ISSUES WITH SERIALIZATION AS THIS OVERWRITES DEFAULT OBJECTMAPPER FOR JSON

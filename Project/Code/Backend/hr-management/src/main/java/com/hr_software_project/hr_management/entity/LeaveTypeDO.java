@@ -16,8 +16,8 @@ public class LeaveTypeDO {
     private Long id;
 
     private String name; // e.g., Annual Leave, Sick Leave
-    private Integer minServiceYears;
-    private Integer maxServiceYears;
+    private Long minServiceMonths; //Months
+    private Long maxServiceMonths; //Months
     private Integer maxDays;
     private String expiryDate;
 }

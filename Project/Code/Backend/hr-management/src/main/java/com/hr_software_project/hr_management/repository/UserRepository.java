@@ -8,4 +8,5 @@ public interface UserRepository extends JpaRepository<UserDO, Long> {
     Optional<UserDO> findByEmail(String email);  // Custom query to find users by email
     boolean existsByUsername(String username);
     UserDO findByUsername(String username);
+
 }

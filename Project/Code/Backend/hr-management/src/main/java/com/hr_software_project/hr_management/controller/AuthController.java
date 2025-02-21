@@ -1,7 +1,7 @@
 package com.hr_software_project.hr_management.controller;
 
 import com.hr_software_project.hr_management.config.JwtTokenUtil;
-import com.hr_software_project.hr_management.dto.RegisterRequest;
+import com.hr_software_project.hr_management.dto.RegisterRequestDTO;
 import com.hr_software_project.hr_management.entity.UserDO;
 import com.hr_software_project.hr_management.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequestDTO registerRequest) {
         // Validate user details (e.g., check if username is already taken)
         String username = registerRequest.getUsername();
         String password = registerRequest.getPassword();
@@ -44,7 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody RegisterRequest.LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody RegisterRequestDTO.LoginRequest loginRequest) {
         // Authenticate user (e.g., check username and password) need frontend to encode also
         UserDO user = authService.findByUsername(loginRequest.getUsername());
         if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
@@ -55,6 +55,6 @@ public class AuthController {
         String token = jwtTokenUtil.generateToken(loginRequest.getUsername());
 
         // Return token to client
-        return ResponseEntity.ok(new RegisterRequest.JwtResponse(token));
+        return ResponseEntity.ok(new RegisterRequestDTO.JwtResponse(token));
     }
 }

@@ -23,8 +23,13 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
+
     public UserDO getUserByEmail(Long currentUserId, String email) {
         return userRepository.findByEmail(email).get();
+    }
+
+    public UserDO getUserById(Long userId) {
+        return userRepository.findById(userId).get();
     }
 
     public UserDO createUser(CreateUserRequestDTO req) {

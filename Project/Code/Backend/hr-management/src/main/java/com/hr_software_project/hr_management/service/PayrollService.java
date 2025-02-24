@@ -11,16 +11,15 @@ import java.util.List;
 public interface PayrollService {
 
 
-    SalaryStatementDO getPayrollDetail(Long currentUserId, String payrollId);
+    SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId);
     SalaryStatementDO createPayroll(CreatePayrollRequestDTO req);
-    UserDO updatePayroll(UpdatePayrollRequestDTO req);
+    SalaryStatementDO updatePayroll(UpdatePayrollRequestDTO req);
     List<SalaryStatementDO> getUserPayrolls(Long currentUserId, Long userId);
 
-    SalaryStatementDO createDeduction(CreateDeductionRequestDTO req);
-    List<DeductionDO> getDeductions(Long currentUserId, Long userId);
+    DeductionDO createDeduction(CreateDeductionRequestDTO req);
     DeductionDO getDeductionDetail(Long currentUserId, Long deductionId);
     List<DeductionDO> getAllDeductionDetail(Long currentUserId);
-    DeductionDO updateDeduction(DeductionDO req);
+    DeductionDO updateDeduction(DeductionDO req, Long currentUserId);
     void deleteDeduction(Long currentUserId, Long deductionId);
     UserDeductionDO createDeductionForUser(CreateDeductionRequestDTO req);
     UserDeductionDO updateDeductionForUser(UserDeductionDO req);

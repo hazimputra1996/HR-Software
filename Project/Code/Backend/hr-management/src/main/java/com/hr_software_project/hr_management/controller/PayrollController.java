@@ -18,7 +18,7 @@ public class PayrollController {
 
     @GetMapping("/getPayrollDetail")
     public SalaryStatementDO getPayrollDetail(
-            @RequestParam String payrollId,
+            @RequestParam Long payrollId,
             @RequestParam Long currentUserId) {
         return payrollService.getPayrollDetail(currentUserId, payrollId);
     }
@@ -30,7 +30,7 @@ public class PayrollController {
     }
 
     @PutMapping("/updatePayroll")
-    public UserDO updatePayroll(
+    public SalaryStatementDO updatePayroll(
             @RequestBody UpdatePayrollRequestDTO req) {
         return payrollService.updatePayroll(req);
     }
@@ -43,16 +43,9 @@ public class PayrollController {
     }
 
     @PostMapping("/deduction/createDeduction")
-    public SalaryStatementDO createDeduction(
+    public DeductionDO createDeduction(
             @RequestBody CreateDeductionRequestDTO req) {
         return payrollService.createDeduction(req);
-    }
-
-    @GetMapping("/deduction/getDeductions")
-    public List<DeductionDO> getDeductions(
-            @RequestParam Long currentUserId,
-            @RequestParam Long userId) {
-        return payrollService.getDeductions(currentUserId, userId);
     }
 
     @GetMapping("/deduction/getDeductionDetail")
@@ -70,8 +63,9 @@ public class PayrollController {
 
     @PutMapping("/deduction/updateDeduction")
     public DeductionDO updateDeduction(
-            @RequestBody DeductionDO deduction) {
-        return payrollService.updateDeduction(deduction);
+            @RequestBody DeductionDO deduction,
+            @RequestParam Long currentUserId) {
+        return payrollService.updateDeduction(deduction, currentUserId);
     }
 
     @DeleteMapping("/deduction/deleteDeduction")

@@ -10,11 +10,11 @@ import lombok.*;
 @Data
 public class CreateDeductionRequestDTO {
 
-    private String currentUserId;
+    private Long currentUserId;
     private String name;
     private String deductionType;
     private Double rate;
-    private String maxLimit;
+    private Double maxLimit;
     private String description;
 }
 

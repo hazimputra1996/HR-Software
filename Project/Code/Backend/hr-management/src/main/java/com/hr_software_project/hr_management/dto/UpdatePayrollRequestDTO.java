@@ -11,7 +11,7 @@ import lombok.*;
 public class UpdatePayrollRequestDTO {
     private Long id;
     private String userId;
-    private String currentUserId;
+    private Long currentUserId;
     private String statementDate;
     private Double baseSalary;
     private Double bonuses;

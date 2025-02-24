@@ -1,18 +1,18 @@
 package com.hr_software_project.hr_management.method;
 
+import com.hr_software_project.hr_management.constant.Constants;
 import com.hr_software_project.hr_management.dto.CreateLeaveRequestDTO;
 import com.hr_software_project.hr_management.dto.LeaveBalanceDTO;
 import com.hr_software_project.hr_management.entity.LeaveCarryForwardDO;
 import com.hr_software_project.hr_management.entity.LeaveDO;
 import com.hr_software_project.hr_management.entity.LeaveTypeDO;
+import com.hr_software_project.hr_management.entity.PublicHolidayDO;
 import com.hr_software_project.hr_management.entity.UserDO;
 import com.hr_software_project.hr_management.enums.LeaveStatus;
 import com.hr_software_project.hr_management.enums.Role;
 import com.hr_software_project.hr_management.error.ServiceErrorCodes;
 import com.hr_software_project.hr_management.error.ServiceException;
-import com.hr_software_project.hr_management.repository.LeaveRepository;
-import com.hr_software_project.hr_management.repository.LeaveTypeRepository;
-import com.hr_software_project.hr_management.repository.UserRepository;
+import com.hr_software_project.hr_management.repository.*;
 import com.hr_software_project.hr_management.service.LeaveService;
 import com.hr_software_project.hr_management.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +36,10 @@ public class LeaveServiceImpl implements LeaveService {
     private UserRepository userRepository;
     @Autowired
     private LeaveTypeRepository leaveTypeRepository;
+    @Autowired
+    private PublicHolidayRepository publicHolidayRepository;
+    @Autowired
+    private LeaveCarryForwardRepository leaveCarryForwardRepository;
 
     public LeaveDO getLeaveDetail(Long currentUserId, Long leaveId){
 
@@ -170,14 +174,81 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     public Long daysLeaveTaken(Date startDate, Date endDate){
-        return Long.valueOf(0);
+
+        List<PublicHolidayDO> allPublicHoliday = new ArrayList<>(publicHolidayRepository.findByDateBetween(startDate, endDate));
+
+        // Find the days between startDate and endDate excluding weekends and public holidays
+        return DateUtils.getWorkingDaysBetween(startDate, endDate, allPublicHoliday);
     }
 
     public List<LeaveCarryForwardDO> carryForwardLeave(Long currentUserId, Long userId, Integer year){
-        return null;
+
+        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO user = userRepository.getById(userId);
+
+        if (currentUser == null || !currentUser.getRole().equals(Role.ADMIN) || !currentUser.getId().equals(user.getSupervisor().getId())){
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
+
+        List<LeaveCarryForwardDO> leaveCarryForwardDOList = new ArrayList<>();
+
+        List<LeaveDO> leaveDOList = leaveRepository.findByUser_Id_And_Between_Date(userId, new Date(year, 1, 1), new Date(year, 12, 31));
+        List<LeaveTypeDO> leaveType = leaveTypeRepository.findByName(Constants.ANNUAL_LEAVE);
+        List<LeaveCarryForwardDO> leaveCarryForwardDOListByYear = new ArrayList<>(getLeaveCarryForwardByYear(currentUserId, userId, year - 1));
+
+        // total carry forward from leaveCarryForwardDOListByYear
+        Integer totalCarryForwardLastYear = leaveCarryForwardDOListByYear.stream()
+                .map(LeaveCarryForwardDO::getCarriedDays)
+                .reduce(0, Integer::sum);
+
+
+
+        leaveType.forEach(leaveTypeDO -> {
+            List<LeaveDO> leaveList = leaveDOList.stream()
+                    .filter(leaveDO -> leaveDO.getLeaveType().getId().equals(leaveTypeDO.getId()))
+                    .collect(Collectors.toList());
+
+            AtomicReference<Long> totalUsed = new AtomicReference<>(Long.valueOf(0));
+            leaveList.forEach(leaveDO -> {
+                Date startDate = leaveDO.getStartDate();
+                Date endDate = leaveDO.getEndDate();
+
+                if (leaveDO.getEndDate().after(new Date(year, 12, 31))) {
+                    endDate = new Date(year, 12, 31);
+
+                } else if (leaveDO.getStartDate().before(new Date(year, 1, 1))){
+                    startDate = new Date(year, 1, 1);
+
+                }
+
+                totalUsed.set(totalUsed.get() + daysLeaveTaken(startDate, endDate));
+            });
+
+            Integer balance = (int) (leaveTypeDO.getMaxDays() + totalCarryForwardLastYear - totalUsed.get());
+
+            LeaveCarryForwardDO leaveCarryForward = new LeaveCarryForwardDO();
+            leaveCarryForward.setCarriedDays(balance);
+            leaveCarryForward.setUser(user);
+            leaveCarryForward.setPreviousYear(year);
+            leaveCarryForward.setExpiryDate(new Date(year + 1, 12, 31));
+
+
+            leaveCarryForwardDOList.add(leaveCarryForward);
+
+        });
+
+        return leaveCarryForwardRepository.saveAll(leaveCarryForwardDOList);
     }
     public List<LeaveCarryForwardDO> getLeaveCarryForwardByYear(Long currentUserId, Long userId, Integer year){
-        return null;
+
+        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO user = userRepository.getById(userId);
+
+        if (currentUser == null || !currentUser.getRole().equals(Role.ADMIN) || !currentUser.getId().equals(user.getSupervisor().getId()) || !currentUser.getId().equals(user.getId())){
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
+
+        return leaveCarryForwardRepository.findByUser_Id_And_PreviousYear(userId, year);
     }
 
 

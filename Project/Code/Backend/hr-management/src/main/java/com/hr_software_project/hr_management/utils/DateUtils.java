@@ -1,9 +1,14 @@
 package com.hr_software_project.hr_management.utils;
 
+import com.hr_software_project.hr_management.entity.PublicHolidayDO;
+import com.hr_software_project.hr_management.error.ServiceErrorCodes;
+import com.hr_software_project.hr_management.error.ServiceException;
+
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 
 public class DateUtils {
 
@@ -30,6 +35,37 @@ public class DateUtils {
         }
 
         return valueToCheck >= minValue && valueToCheck <= maxValue;
+    }
+
+    public static Long getWorkingDaysBetween(Date startDate, Date endDate, List<PublicHolidayDO> allPublicHoliday) {
+        if (startDate == null || endDate == null) {
+            throw new ServiceException(ServiceErrorCodes.DATE_NULL);
+        }
+
+        if (startDate.after(endDate)) {
+            throw new ServiceException(ServiceErrorCodes.WRONG_DATE_RANGE);
+        }
+
+        long workingDays = 0;
+        LocalDate localStartDate = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate localEndDate = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        while (!localStartDate.isAfter(localEndDate)) {
+            if (localStartDate.getDayOfWeek().getValue() < 6) {
+                workingDays++;
+            }
+
+            localStartDate = localStartDate.plusDays(1);
+        }
+
+        for (PublicHolidayDO publicHoliday : allPublicHoliday) {
+            if (isDateBetween(publicHoliday.getDate(), startDate, endDate)) {
+                workingDays--;
+            }
+        }
+
+        return workingDays;
+
     }
 
 

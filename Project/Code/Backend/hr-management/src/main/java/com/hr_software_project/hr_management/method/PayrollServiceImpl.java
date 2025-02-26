@@ -13,7 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Transactional
@@ -43,6 +46,8 @@ public class PayrollServiceImpl implements PayrollService {
     private SalaryStatementEmployeeDeductionRepository salaryStatementEmployeeDeductionRepository;
     @Autowired
     private SalaryStatementEmployerDeductionRepository salaryStatementEmployerDeductionRepository;
+    @Autowired
+    private EmployerDeductionRepository employerDeductionRepository;
 
 public SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId) {
     UserDO currentUser = userRepository.findById(currentUserId)
@@ -67,8 +72,40 @@ public SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId) {
                     .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
             List<AllowanceDO> allowances = allowanceRepository.findByUser_Id(req.getUserId());
-            List<UserDeductionDO> deductions = userDeductionRepository.findByUser_Id(req.getUserId());
+            List<UserDeductionDO> employeeDeductions = userDeductionRepository.findByUser_Id(req.getUserId());
+            List<EmployerDeductionDO> employerDeductions = employerDeductionRepository.findByUser_Id(req.getUserId());
             List<OvertimeDO> overtime = overtimeRepository.findByUser_Id(req.getUserId());
+
+            // filter allowances, employeeDeductions and overtime based on date
+            allowances = allowances.stream()
+                    .filter(a -> req.getDate().after(a.getDateStarted()) && req.getDate().before(a.getDateEnded()))
+                    .collect(Collectors.toList());
+
+            employeeDeductions = employeeDeductions.stream()
+                    .filter(a -> req.getDate().after(a.getStartedDate()) && req.getDate().before(a.getEndedDate()))
+                    .collect(Collectors.toList());
+
+            employerDeductions = employerDeductions.stream()
+                    .filter(a -> req.getDate().after(a.getStartedDate()) && req.getDate().before(a.getEndedDate()))
+                    .collect(Collectors.toList());
+
+            overtime = overtime.stream()
+                    .filter(a -> {
+                        Calendar reqCal = Calendar.getInstance();
+                        reqCal.setTime(req.getDate());
+
+                        Calendar otCal = Calendar.getInstance();
+                        otCal.setTime(a.getOvertimeDate());
+
+                        return reqCal.get(Calendar.MONTH) == otCal.get(Calendar.MONTH) &&
+                                reqCal.get(Calendar.YEAR) == otCal.get(Calendar.YEAR);
+                    })
+                    .collect(Collectors.toList());
+
+            List<SalaryStatementAllowanceDO> salaryStatementAllowances = new ArrayList<>();
+            List<SalaryStatementEmployeeDeductionDO> salaryStatementEmployeeDeductions = new ArrayList<>();
+            List<SalaryStatementEmployerDeductionDO> salaryStatementEmployers = new ArrayList<>();
+            List<SalaryStatementOvertimeDO> salaryStatementOvertimes = new ArrayList<>();
 
             return null;
 

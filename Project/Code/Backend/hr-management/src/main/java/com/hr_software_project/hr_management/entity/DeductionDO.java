@@ -23,5 +23,6 @@ public class DeductionDO {
     private Double rate;
     private Double maxLimit;
     private String description;
+    private Boolean isEmployeeDeduction;
 }
 

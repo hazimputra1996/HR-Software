@@ -68,6 +68,19 @@ public class DateUtils {
 
     }
 
+    public static Double getHoursBetween(Date startTime, Date endTime) {
+        if (startTime == null || endTime == null) {
+            throw new ServiceException(ServiceErrorCodes.DATE_NULL);
+        }
+
+        if (startTime.after(endTime)) {
+            throw new ServiceException(ServiceErrorCodes.WRONG_DATE_RANGE);
+        }
+
+        long diff = endTime.getTime() - startTime.getTime();
+        return (double) diff / (60 * 60 * 1000);
+    }
+
 
 
     }

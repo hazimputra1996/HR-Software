@@ -16,6 +16,8 @@ public class CreateUserRequestDTO {
     private String password;
     private String role;
     private Double salary;
+    private Double daily_working_hours;
+    private Double number_of_working_days_per_week;
     private String epfNumber;
     private String socsoNumber;
     private String incomeTaxNumber;

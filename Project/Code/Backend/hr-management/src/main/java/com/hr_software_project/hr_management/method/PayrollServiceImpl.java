@@ -5,10 +5,10 @@ import com.hr_software_project.hr_management.entity.*;
 import com.hr_software_project.hr_management.enums.Role;
 import com.hr_software_project.hr_management.error.ServiceErrorCodes;
 import com.hr_software_project.hr_management.error.ServiceException;
-import com.hr_software_project.hr_management.repository.DeductionRepository;
-import com.hr_software_project.hr_management.repository.SalaryStatementRepository;
-import com.hr_software_project.hr_management.repository.UserRepository;
+import com.hr_software_project.hr_management.repository.*;
 import com.hr_software_project.hr_management.service.PayrollService;
+import com.hr_software_project.hr_management.utils.DateUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +18,7 @@ import java.util.List;
 
 @Transactional
 @Service
+@RequiredArgsConstructor
 public class PayrollServiceImpl implements PayrollService {
 
     @Autowired
@@ -26,59 +27,94 @@ public class PayrollServiceImpl implements PayrollService {
     private SalaryStatementRepository salaryStatementRepository;
     @Autowired
     private DeductionRepository deductionRepository;
+    @Autowired
+    private UserDeductionRepository userDeductionRepository;
+    @Autowired
+    private OvertimeRepository overtimeRepository;
+    @Autowired
+    private PublicHolidayRepository publicHolidayRepository;
+    @Autowired
+    private AllowanceRepository allowanceRepository;
+    @Autowired
+    private SalaryStatementOvertimeRepository salaryStatementOvertimeRepository;
+    @Autowired
+    private SalaryStatementAllowanceRepository salaryStatementAllowanceRepository;
+    @Autowired
+    private SalaryStatementEmployeeDeductionRepository salaryStatementEmployeeDeductionRepository;
+    @Autowired
+    private SalaryStatementEmployerDeductionRepository salaryStatementEmployerDeductionRepository;
 
-    public SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId){
+public SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId) {
+    UserDO currentUser = userRepository.findById(currentUserId)
+        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+    SalaryStatementDO payroll = salaryStatementRepository.findById(payrollId)
+        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
-        UserDO currentUser = userRepository.getById(currentUserId);
-        SalaryStatementDO payroll = salaryStatementRepository.getById(payrollId);
-
-        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(payroll.getUser().getId())){
-            return payroll;
-        } else {
-            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
-        }
-
+    if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(payroll.getUser().getId())) {
+        return payroll;
+    } else {
+        throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
     }
+}
 
     public SalaryStatementDO createPayroll(CreatePayrollRequestDTO req){
-        return null;
-    }
+        UserDO currentUser = userRepository.findById(req.getCurrentUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
-    public SalaryStatementDO updatePayroll(UpdatePayrollRequestDTO req){
-
-        UserDO currentUser = userRepository.getById(req.getCurrentUserId());
 
         if (currentUser.getRole().equals(Role.ADMIN)){
-            SalaryStatementDO payroll = salaryStatementRepository.getById(req.getId());
+            UserDO user = userRepository.findById(req.getUserId())
+                    .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
-            payroll.setBaseSalary(req.getBaseSalary());
-            payroll.setBonuses(req.getBonuses());
-            payroll.setAllowances(req.getAllowances());
-            payroll.setOvertimePay(req.getOvertimePay());
-            payroll.setGrossSalary(req.getGrossSalary());
-            payroll.setNetSalary(req.getNetSalary());
-            payroll.setTotalDeductions(req.getTotalDeductions());
-            payroll.setRemarks(req.getRemarks());
-            return salaryStatementRepository.save(payroll);
+            List<AllowanceDO> allowances = allowanceRepository.findByUser_Id(req.getUserId());
+            List<UserDeductionDO> deductions = userDeductionRepository.findByUser_Id(req.getUserId());
+            List<OvertimeDO> overtime = overtimeRepository.findByUser_Id(req.getUserId());
+
+            return null;
 
         } else {
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
         }
     }
 
-    public List<SalaryStatementDO> getUserPayrolls(Long currentUserId, Long userId){
-        UserDO currentUser = userRepository.getById(currentUserId);
-        UserDO user = userRepository.getById(userId);
+    public SalaryStatementDO updatePayroll(UpdatePayrollRequestDTO req) {
+    UserDO currentUser = userRepository.findById(req.getCurrentUserId())
+        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
-        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(user.getId())){
-            return salaryStatementRepository.findByUser_Id(userId);
-        } else {
-            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
-        }
+    if (currentUser.getRole().equals(Role.ADMIN)) {
+        SalaryStatementDO payroll = salaryStatementRepository.findById(req.getId())
+            .orElseThrow(() -> new ServiceException(ServiceErrorCodes.PAYROLL_NOT_FOUND));
+
+        payroll.setBaseSalary(req.getBaseSalary());
+        payroll.setBonuses(req.getBonuses());
+        payroll.setAllowances(req.getAllowances());
+        payroll.setOvertimePay(req.getOvertimePay());
+        payroll.setGrossSalary(req.getGrossSalary());
+        payroll.setNetSalary(req.getNetSalary());
+        payroll.setTotalDeductions(req.getTotalDeductions());
+        payroll.setRemarks(req.getRemarks());
+        return salaryStatementRepository.save(payroll);
+    } else {
+        throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
     }
+}
+
+    public List<SalaryStatementDO> getUserPayrolls(Long currentUserId, Long userId) {
+    UserDO currentUser = userRepository.findById(currentUserId)
+        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+    UserDO user = userRepository.findById(userId)
+        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+    if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(user.getId())) {
+        return salaryStatementRepository.findByUser_Id(userId);
+    } else {
+        throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+    }
+}
 
     public DeductionDO createDeduction(CreateDeductionRequestDTO req){
-        UserDO currentUser = userRepository.getById(req.getCurrentUserId());
+        UserDO currentUser = userRepository.findById(req.getCurrentUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser.getRole().equals(Role.ADMIN)){
             DeductionDO deduction = new DeductionDO();
@@ -96,8 +132,10 @@ public class PayrollServiceImpl implements PayrollService {
     }
 
     public DeductionDO getDeductionDetail(Long currentUserId, Long deductionId){
-        UserDO currentUser = userRepository.getById(currentUserId);
-        DeductionDO deduction = deductionRepository.getById(deductionId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        DeductionDO deduction = deductionRepository.findById(deductionId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.DEDUCTION_NOT_FOUND));
 
         if (currentUser.getRole().equals(Role.ADMIN)){
             return deduction;
@@ -109,7 +147,8 @@ public class PayrollServiceImpl implements PayrollService {
 
     public List<DeductionDO> getAllDeductionDetail(Long currentUserId){
 
-        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser.getRole().equals(Role.ADMIN)){
             return deductionRepository.findAll();
@@ -120,10 +159,12 @@ public class PayrollServiceImpl implements PayrollService {
 
     public DeductionDO updateDeduction(DeductionDO req, Long currentUserId){
 
-        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser.getRole().equals(Role.ADMIN)){
-            DeductionDO deduction = deductionRepository.getById(req.getId());
+            DeductionDO deduction = deductionRepository.findById(req.getId())
+                    .orElseThrow(() -> new ServiceException(ServiceErrorCodes.DEDUCTION_NOT_FOUND));
 
             deduction.setName(req.getName());
             deduction.setRate(req.getRate());
@@ -139,7 +180,8 @@ public class PayrollServiceImpl implements PayrollService {
 
     public void deleteDeduction(Long currentUserId, Long deductionId){
 
-        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser.getRole().equals(Role.ADMIN)){
             deductionRepository.deleteById(deductionId);
@@ -148,53 +190,312 @@ public class PayrollServiceImpl implements PayrollService {
         }
     }
 
-    public UserDeductionDO createDeductionForUser(CreateDeductionRequestDTO req){
-        return null;
+    public UserDeductionDO createDeductionForUser(CreateUserDeductionRequestDTO req){
+        UserDO currentUser = userRepository.findById(req.getCurrentUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)) {
+            UserDO user = userRepository.findById(req.getUserId())
+                    .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+            DeductionDO deduction = deductionRepository.findById(req.getDeductionId())
+                    .orElseThrow(() -> new ServiceException(ServiceErrorCodes.DEDUCTION_NOT_FOUND));
+
+            UserDeductionDO userDeduction = new UserDeductionDO();
+            userDeduction.setUser(user);
+            userDeduction.setDeduction(deduction);
+            userDeduction.setAmount(req.getAmount());
+            userDeduction.setStartedDate(req.getStartedDate());
+            userDeduction.setEndedDate(req.getEndedDate());
+
+            return userDeductionRepository.save(userDeduction);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
-    public UserDeductionDO updateDeductionForUser(UserDeductionDO req){
-        return null;
+    public UserDeductionDO updateDeductionForUser(UserDeductionDO req, Long currentUserId){
+
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)){
+
+            return userDeductionRepository.save(req);
+
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
     public void deleteDeductionForUser(Long currentUserId, Long userDeductionId){
+
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)) {
+            userDeductionRepository.deleteById(userDeductionId);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
     public OvertimeDO createOvertimeRecord(CreateOvertimeRequestDTO req){
-        return null;
+
+        UserDO currentUser = userRepository.findById(req.getCurrentUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        UserDO user = userRepository.findById(req.getUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(user.getId()) || currentUser.getId().equals(user.getSupervisor().getId())) {
+            OvertimeDO overtime = new OvertimeDO();
+
+            Double salary = user.getSalary();
+            Double dailyWorkingHours = user.getDaily_working_hours();
+            Double numberOfWorkingDaysPerWeek = user.getNumber_of_working_days_per_week();
+
+            Double hourlyRate = salary / (dailyWorkingHours * numberOfWorkingDaysPerWeek * 4.33); // 4.33 is the average number of weeks in a month
+            Double overtimeRate = hourlyRate * req.getRate();
+
+            Double overtimeHours = DateUtils.getHoursBetween(req.getStartTime(), req.getEndTime());
+
+            overtime.setUser(user);
+            overtime.setOvertimeDate(req.getOvertimeDate());
+            overtime.setStartTime(req.getStartTime());
+            overtime.setEndTime(req.getEndTime());
+            overtime.setOvertimeRate(overtimeRate);
+            overtime.setHoursWorked(overtimeHours);
+            overtime.setTotalOvertimePrice(overtimeRate * overtimeHours);
+            overtime.setRemarks(req.getRemarks());
+
+            return overtimeRepository.save(overtime);
+
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
-    public OvertimeDO updateOvertimeRecord(OvertimeDO req, Long currentUserId){
-        return null;
+    public OvertimeDO updateOvertimeRecord(UpdateOvertimeRequestDTO req){
+
+        UserDO currentUser = userRepository.findById(req.getCurrentUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        UserDO user = userRepository.findById(req.getUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(user.getId()) || currentUser.getId().equals(user.getSupervisor().getId())) {
+
+            OvertimeDO overtime = new OvertimeDO();
+
+            Double salary = user.getSalary();
+            Double dailyWorkingHours = user.getDaily_working_hours();
+            Double numberOfWorkingDaysPerWeek = user.getNumber_of_working_days_per_week();
+
+            Double hourlyRate = salary / (dailyWorkingHours * numberOfWorkingDaysPerWeek * 4.33); // 4.33 is the average number of weeks in a month
+            Double overtimeRate = hourlyRate * req.getRate();
+
+            Double overtimeHours = DateUtils.getHoursBetween(req.getStartTime(), req.getEndTime());
+
+            overtime.setUser(user);
+            overtime.setId(req.getOvertimeId());
+            overtime.setOvertimeDate(req.getOvertimeDate());
+            overtime.setStartTime(req.getStartTime());
+            overtime.setEndTime(req.getEndTime());
+            overtime.setOvertimeRate(overtimeRate);
+            overtime.setHoursWorked(overtimeHours);
+            overtime.setTotalOvertimePrice(overtimeRate * overtimeHours);
+            overtime.setRemarks(req.getRemarks());
+
+            return overtimeRepository.save(overtime);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
-    public void deleteOvertimeRecord(Long currentUserId, Long overtimeId){
+    public void deleteOvertimeRecord(Long currentUserId, Long overtimeId) {
+
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        OvertimeDO overtime = overtimeRepository.findById(overtimeId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.OVERTIME_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(overtime.getUser().getId()) || currentUser.getId().equals(overtime.getUser().getSupervisor().getId())) {
+            overtimeRepository.deleteById(overtimeId);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
-    public List<OvertimeDO> getOvertimeRecords(Long currentUserId, Long userId){
-        return null;
+    public List<OvertimeDO> getOvertimeRecords(Long currentUserId, Long userId) {
+
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        UserDO user = userRepository.findById(userId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(user.getId()) || currentUser.getId().equals(user.getSupervisor().getId())) {
+            return overtimeRepository.findByUser_Id(userId);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
     public OvertimeDO getOvertimeRecordDetail(Long currentUserId, Long overtimeId){
-        return null;
+
+        OvertimeDO overtime = overtimeRepository.findById(overtimeId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.OVERTIME_NOT_FOUND));
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        UserDO user = overtime.getUser();
+
+        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(user.getId()) || currentUser.getId().equals(user.getSupervisor().getId())) {
+            return overtime;
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
     public PublicHolidayDO createPublicHoliday(CreatePublicHolidayRequestDTO req){
-        return null;
+
+        UserDO currentUser = userRepository.findById(req.getCurrentUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)){
+            PublicHolidayDO publicHoliday = new PublicHolidayDO();
+
+            publicHoliday.setName(req.getName());
+            publicHoliday.setDate(req.getDate());
+            publicHoliday.setCountry(req.getCountry());
+            publicHoliday.setState(req.getState());
+            publicHoliday.setRecurring(false);
+
+            return publicHolidayRepository.save(publicHoliday);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
-    public List<PublicHolidayDO> getPublicHolidays(Long currentUserId){
-        return null;
+    public List<PublicHolidayDO> getPublicHolidays(Integer year){
+
+        return publicHolidayRepository.findByYear(year);
     }
 
-    public PublicHolidayDO getPublicHolidayDetail(Long currentUserId, Long publicHolidayId){
-        return null;
+    public PublicHolidayDO getPublicHolidayDetail(Long publicHolidayId){
+
+        return publicHolidayRepository.findById(publicHolidayId).orElse(null);
     }
 
     public PublicHolidayDO updatePublicHoliday(PublicHolidayDO req, Long currentUserId){
-        return null;
+
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)){
+            PublicHolidayDO publicHoliday = publicHolidayRepository.findById(req.getId())
+                            .orElseThrow(() -> new ServiceException(ServiceErrorCodes.PUBLIC_HOLIDAY_NOT_FOUND));
+
+            publicHoliday.setName(req.getName());
+            publicHoliday.setDate(req.getDate());
+            publicHoliday.setCountry(req.getCountry());
+            publicHoliday.setState(req.getState());
+            publicHoliday.setRecurring(false);
+
+            return publicHolidayRepository.save(publicHoliday);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
+
     }
 
     public void deletePublicHoliday(Long currentUserId, Long publicHolidayId){
+
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+            if (currentUser.getRole().equals(Role.ADMIN)){
+                publicHolidayRepository.deleteById(publicHolidayId);
+            } else {
+                throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+            }
+    }
+
+    public AllowanceDO createAllowance(CreateAllowanceRequestDTO req){
+        UserDO currentUser = userRepository.findById(req.getCurrentUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)){
+            AllowanceDO allowance = new AllowanceDO();
+
+            allowance.setName(req.getName());
+            allowance.setOneTimeBonus(req.getOneTimeBonus());
+            allowance.setAmount(req.getAmount());
+            allowance.setDateStarted(req.getDateStarted());
+            allowance.setDateEnded(req.getDateEnded());
+            allowance.setRemarks(req.getRemarks());
+            allowance.setAllowanceType(req.getAllowanceType());
+
+            return allowanceRepository.save(allowance);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
+    }
+
+    public AllowanceDO getAllowanceDetail(Long currentUserId, Long allowanceId){
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        AllowanceDO allowance = allowanceRepository.findById(allowanceId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.ALLOWANCE_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)){
+            return allowance;
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
+    }
+
+    public AllowanceDO updateAllowance(AllowanceDO req, Long currentUserId){
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)){
+            AllowanceDO allowance = allowanceRepository.findById(req.getId())
+                    .orElseThrow(() -> new ServiceException(ServiceErrorCodes.ALLOWANCE_NOT_FOUND));
+
+            allowance.setName(req.getName());
+            allowance.setOneTimeBonus(req.getOneTimeBonus());
+            allowance.setAmount(req.getAmount());
+            allowance.setDateStarted(req.getDateStarted());
+            allowance.setDateEnded(req.getDateEnded());
+            allowance.setRemarks(req.getRemarks());
+            allowance.setAllowanceType(req.getAllowanceType());
+
+            return allowanceRepository.save(allowance);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
+    }
+
+    public List<AllowanceDO> getAllAllowanceDetailForUser(Long currentUserId, Long userId){
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        UserDO user = userRepository.findById(userId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(user.getId())) {
+            return allowanceRepository.findByUser_Id(userId);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
+    }
+
+    public void deleteAllowance(Long currentUserId, Long allowanceId){
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+        if (currentUser.getRole().equals(Role.ADMIN)){
+            allowanceRepository.deleteById(allowanceId);
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
 
 }

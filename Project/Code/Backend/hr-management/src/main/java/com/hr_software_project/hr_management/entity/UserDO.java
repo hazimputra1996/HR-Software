@@ -20,6 +20,8 @@ public class UserDO {
 
     private String first_name;
     private String last_name;
+
+    @Column(unique = true, nullable = false)
     private String username;
 
     @Column(unique = true, nullable = false)
@@ -32,6 +34,9 @@ public class UserDO {
     private Role role; // ADMIN, EMPLOYEE, SUPERVISOR
 
     private Double salary;
+    private Double daily_working_hours;
+    private Double number_of_working_days_per_week;
+
     private String epf_number;
     private String socso_number;
     private String income_tax_number;

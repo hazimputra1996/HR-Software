@@ -10,15 +10,17 @@ import java.util.Date;
 @Getter
 @Setter
 @Data
-public class CreateOvertimeRequestDTO {
+public class CreateAllowanceRequestDTO {
 
     private Long currentUserId;
     private Long userId;
-    private Date overtimeDate;
-    private Date startTime;
-    private Date endTime;
+    private String name;
+    private Boolean oneTimeBonus;
+    private Integer amount;
+    private String allowanceType;
+    private Date dateStarted;
+    private Date dateEnded;
     private String remarks;
-    private Double rate = 1.5;
 
 }
 

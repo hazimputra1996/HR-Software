@@ -26,7 +26,7 @@ public class OvertimeDO {
     private Date endTime;
     private Double hoursWorked;
     private Double overtimeRate;
-    private Double totalOvertime;
+    private Double totalOvertimePrice;
     private String remarks;
 }
 

@@ -77,14 +77,15 @@ public class PayrollController {
 
     @PostMapping("/deduction/createDeductionForUser")
     public UserDeductionDO createDeductionForUser(
-            @RequestBody CreateDeductionRequestDTO req) {
+            @RequestBody CreateUserDeductionRequestDTO req) {
         return payrollService.createDeductionForUser(req);
     }
 
     @PutMapping("/deduction/updateDeductionForUser")
     public UserDeductionDO updateDeductionForUser(
-            @RequestBody UserDeductionDO req) {
-        return payrollService.updateDeductionForUser(req);
+            @RequestBody UserDeductionDO req,
+            @RequestParam Long currentUserId) {
+        return payrollService.updateDeductionForUser(req, currentUserId);
     }
 
     @DeleteMapping("/deduction/deleteDeductionForUser")
@@ -116,9 +117,8 @@ public class PayrollController {
 
     @PutMapping("/overtime/updateOvertimeRecord")
     public OvertimeDO updateOvertimeRecord(
-            @RequestBody OvertimeDO req,
-            @RequestParam Long currentUserId) {
-        return payrollService.updateOvertimeRecord(req, currentUserId);
+            @RequestBody UpdateOvertimeRequestDTO req) {
+        return payrollService.updateOvertimeRecord(req);
     }
 
     @DeleteMapping("/overtime/deleteOvertimeRecord")
@@ -136,15 +136,14 @@ public class PayrollController {
 
     @GetMapping("/public-holiday/getPublicHolidays")
     public List<PublicHolidayDO> getPublicHolidays(
-            @RequestParam Long currentUserId) {
-        return payrollService.getPublicHolidays(currentUserId);
+            @RequestParam Integer year) {
+        return payrollService.getPublicHolidays(year);
     }
 
     @GetMapping("/public-holiday/getPublicHolidayDetail")
     public PublicHolidayDO getPublicHolidayDetail(
-            @RequestParam Long currentUserId,
             @RequestParam Long publicHolidayId) {
-        return payrollService.getPublicHolidayDetail(currentUserId, publicHolidayId);
+        return payrollService.getPublicHolidayDetail(publicHolidayId);
     }
 
     @PutMapping("/public-holiday/updatePublicHoliday")
@@ -161,6 +160,38 @@ public class PayrollController {
         payrollService.deletePublicHoliday(currentUserId, publicHolidayId);
     }
 
+    @PostMapping("/allowance/createAllowance")
+    public AllowanceDO createAllowance(
+            @RequestBody CreateAllowanceRequestDTO req) {
+        return payrollService.createAllowance(req);
+    }
 
+    @GetMapping("/allowance/getAllowanceDetail")
+    public AllowanceDO getAllowanceDetail(
+            @RequestParam Long currentUserId,
+            @RequestParam Long allowanceId) {
+        return payrollService.getAllowanceDetail(currentUserId, allowanceId);
+    }
+
+    @GetMapping("/allowance/getAllAllowanceDetailForUser")
+    public List<AllowanceDO> getAllAllowanceDetailForUser(
+            @RequestParam Long currentUserId,
+            @RequestParam Long userId) {
+        return payrollService.getAllAllowanceDetailForUser(currentUserId, userId);
+    }
+
+    @PutMapping("/allowance/updateAllowance")
+    public AllowanceDO updateAllowance(
+            @RequestBody AllowanceDO req,
+            @RequestParam Long currentUserId) {
+        return payrollService.updateAllowance(req, currentUserId);
+    }
+
+    @DeleteMapping("/allowance/deleteAllowance")
+    public void deleteAllowance(
+            @RequestParam Long currentUserId,
+            @RequestParam Long allowanceId) {
+        payrollService.deleteAllowance(currentUserId, allowanceId);
+    }
 
 }

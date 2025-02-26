@@ -8,6 +8,7 @@ import com.hr_software_project.hr_management.error.ServiceErrorCodes;
 import com.hr_software_project.hr_management.error.ServiceException;
 import com.hr_software_project.hr_management.repository.AuditTrailRepository;
 import com.hr_software_project.hr_management.service.AuditTrailService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Transactional
 @Service
+@RequiredArgsConstructor
 public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Autowired

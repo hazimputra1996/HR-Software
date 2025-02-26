@@ -7,6 +7,7 @@ import com.hr_software_project.hr_management.error.ServiceErrorCodes;
 import com.hr_software_project.hr_management.error.ServiceException;
 import com.hr_software_project.hr_management.repository.UserRepository;
 import com.hr_software_project.hr_management.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Transactional
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -25,11 +27,13 @@ public class UserServiceImpl implements UserService {
 
 
     public UserDO getUserByEmail(Long currentUserId, String email) {
-        return userRepository.findByEmail(email).get();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
     }
 
     public UserDO getUserById(Long userId) {
-        return userRepository.findById(userId).get();
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
     }
 
     public UserDO createUser(CreateUserRequestDTO req) {
@@ -55,6 +59,8 @@ public class UserServiceImpl implements UserService {
         user.setSocso_number(req.getSocsoNumber());
         user.setIncome_tax_number(req.getIncomeTaxNumber());
         user.setLeave_balance(req.getLeaveBalance());
+        user.setDaily_working_hours(req.getDaily_working_hours());
+        user.setNumber_of_working_days_per_week(req.getNumber_of_working_days_per_week());
 
         try {
             user.setHire_date(new SimpleDateFormat("yyyy-MM-dd").parse(req.getHireDate()));

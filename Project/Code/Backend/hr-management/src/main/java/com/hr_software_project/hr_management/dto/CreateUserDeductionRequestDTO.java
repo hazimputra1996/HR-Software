@@ -10,10 +10,14 @@ import java.util.Date;
 @Getter
 @Setter
 @Data
-public class CreatePayrollRequestDTO {
-    private Date date;
-    private Long userId;
+public class CreateUserDeductionRequestDTO {
+
     private Long currentUserId;
+    private Long userId;
+    private Double amount;
+    private Date startedDate;
+    private Date endedDate;
+    private Long deductionId;
 }
 
 

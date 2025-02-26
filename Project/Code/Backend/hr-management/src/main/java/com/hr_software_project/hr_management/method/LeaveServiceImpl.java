@@ -15,6 +15,7 @@ import com.hr_software_project.hr_management.error.ServiceException;
 import com.hr_software_project.hr_management.repository.*;
 import com.hr_software_project.hr_management.service.LeaveService;
 import com.hr_software_project.hr_management.utils.DateUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 
 @Transactional
 @Service
+@RequiredArgsConstructor
 public class LeaveServiceImpl implements LeaveService {
 
     @Autowired
@@ -43,10 +45,12 @@ public class LeaveServiceImpl implements LeaveService {
 
     public LeaveDO getLeaveDetail(Long currentUserId, Long leaveId){
 
-        LeaveDO leave = leaveRepository.findById(leaveId).get();
+        LeaveDO leave = leaveRepository.findById(leaveId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.LEAVE_NOT_FOUND));
 
         UserDO leaveUser = leave.getUser();
-        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser == null || !currentUser.getRole().equals(Role.ADMIN) || !currentUser.getId().equals(leaveUser.getSupervisor().getId()) || !leaveUser.getId().equals(currentUser.getId())){
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
@@ -60,7 +64,8 @@ public class LeaveServiceImpl implements LeaveService {
         if (!req.getUserId().equals(req.getCurrentUserId())){
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
         }
-        UserDO userDO = userRepository.getById(req.getUserId());
+        UserDO userDO = userRepository.findById(req.getUserId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         LeaveDO leaveDO = new LeaveDO();
 
@@ -88,10 +93,12 @@ public class LeaveServiceImpl implements LeaveService {
 
     public LeaveDO update(LeaveDO req, Long currentUserId) {
 
-        LeaveDO leave = leaveRepository.findById(req.getId()).get();
+        LeaveDO leave = leaveRepository.findById(req.getId())
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.LEAVE_NOT_FOUND));
 
         UserDO leaveUser = leave.getUser();
-        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser == null || !currentUser.getId().equals(leaveUser.getSupervisor().getId())){
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
@@ -101,7 +108,8 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     public List<LeaveDO> getAllLeaveByUser(Long currentUserId){
-        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser == null || !currentUser.getRole().equals(Role.ADMIN)){
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
@@ -111,7 +119,8 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     public List<LeaveDO> getAllLeaveFilterByStatus(Long currentUserId, String status, Boolean allUser){
-        UserDO currentUser = userRepository.getById(currentUserId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         List<LeaveDO> allLeave = leaveRepository.findAll();
         Set<LeaveDO> leaveSet = new HashSet<>();
@@ -137,7 +146,8 @@ public class LeaveServiceImpl implements LeaveService {
         List<LeaveTypeDO> leaveType = leaveTypeRepository.findAll();
         List<LeaveDO> leaveDOList = leaveRepository.findByUser_Id(currentUserId);
 
-        UserDO userDetails = userRepository.getById(currentUserId);
+        UserDO userDetails = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         Date hired_date = userDetails.getHire_date();
         Date current_date = new Date();
@@ -183,8 +193,10 @@ public class LeaveServiceImpl implements LeaveService {
 
     public List<LeaveCarryForwardDO> carryForwardLeave(Long currentUserId, Long userId, Integer year){
 
-        UserDO currentUser = userRepository.getById(currentUserId);
-        UserDO user = userRepository.getById(userId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        UserDO user = userRepository.findById(userId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser == null || !currentUser.getRole().equals(Role.ADMIN) || !currentUser.getId().equals(user.getSupervisor().getId())){
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
@@ -241,8 +253,10 @@ public class LeaveServiceImpl implements LeaveService {
     }
     public List<LeaveCarryForwardDO> getLeaveCarryForwardByYear(Long currentUserId, Long userId, Integer year){
 
-        UserDO currentUser = userRepository.getById(currentUserId);
-        UserDO user = userRepository.getById(userId);
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        UserDO user = userRepository.findById(userId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
         if (currentUser == null || !currentUser.getRole().equals(Role.ADMIN) || !currentUser.getId().equals(user.getSupervisor().getId()) || !currentUser.getId().equals(user.getId())){
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);

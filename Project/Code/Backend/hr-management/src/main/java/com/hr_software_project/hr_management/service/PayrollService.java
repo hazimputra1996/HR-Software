@@ -21,19 +21,24 @@ public interface PayrollService {
     List<DeductionDO> getAllDeductionDetail(Long currentUserId);
     DeductionDO updateDeduction(DeductionDO req, Long currentUserId);
     void deleteDeduction(Long currentUserId, Long deductionId);
-    UserDeductionDO createDeductionForUser(CreateDeductionRequestDTO req);
-    UserDeductionDO updateDeductionForUser(UserDeductionDO req);
+    UserDeductionDO createDeductionForUser(CreateUserDeductionRequestDTO req);
+    UserDeductionDO updateDeductionForUser(UserDeductionDO req , Long currentUserId);
     void deleteDeductionForUser(Long currentUserId, Long userDeductionId);
     OvertimeDO createOvertimeRecord(CreateOvertimeRequestDTO req);
-    OvertimeDO updateOvertimeRecord(OvertimeDO req, Long currentUserId);
+    OvertimeDO updateOvertimeRecord(UpdateOvertimeRequestDTO req);
     void deleteOvertimeRecord(Long currentUserId, Long overtimeId);
     List<OvertimeDO> getOvertimeRecords(Long currentUserId, Long userId);
     OvertimeDO getOvertimeRecordDetail(Long currentUserId, Long overtimeId);
     PublicHolidayDO createPublicHoliday(CreatePublicHolidayRequestDTO req);
-    List<PublicHolidayDO> getPublicHolidays(Long currentUserId);
-    PublicHolidayDO getPublicHolidayDetail(Long currentUserId, Long publicHolidayId);
+    List<PublicHolidayDO> getPublicHolidays(Integer year);
+    PublicHolidayDO getPublicHolidayDetail(Long publicHolidayId);
     PublicHolidayDO updatePublicHoliday(PublicHolidayDO req, Long currentUserId);
     void deletePublicHoliday(Long currentUserId, Long publicHolidayId);
+    AllowanceDO createAllowance(CreateAllowanceRequestDTO req);
+    AllowanceDO getAllowanceDetail(Long currentUserId, Long allowanceId);
+    AllowanceDO updateAllowance(AllowanceDO req, Long currentUserId);
+    List<AllowanceDO> getAllAllowanceDetailForUser(Long currentUserId, Long userId);
+    void deleteAllowance(Long currentUserId, Long allowanceId);
 
 
 

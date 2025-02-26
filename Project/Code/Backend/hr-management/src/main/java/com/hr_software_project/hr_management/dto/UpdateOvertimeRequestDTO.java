@@ -10,9 +10,10 @@ import java.util.Date;
 @Getter
 @Setter
 @Data
-public class CreateOvertimeRequestDTO {
+public class UpdateOvertimeRequestDTO {
 
     private Long currentUserId;
+    private Long OvertimeId;
     private Long userId;
     private Date overtimeDate;
     private Date startTime;

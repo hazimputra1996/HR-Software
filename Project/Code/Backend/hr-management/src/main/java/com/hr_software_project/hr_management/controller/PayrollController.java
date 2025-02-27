@@ -17,26 +17,26 @@ public class PayrollController {
 
 
     @GetMapping("/getPayrollDetail")
-    public SalaryStatementDO getPayrollDetail(
+    public SalaryStatementDTO getPayrollDetail(
             @RequestParam Long payrollId,
             @RequestParam Long currentUserId) {
         return payrollService.getPayrollDetail(currentUserId, payrollId);
     }
 
     @PostMapping("/createPayroll")
-    public SalaryStatementDO createPayroll(
+    public SalaryStatementDTO createPayroll(
             @RequestBody CreatePayrollRequestDTO req) {
         return payrollService.createPayroll(req);
     }
 
     @PutMapping("/updatePayroll")
-    public SalaryStatementDO updatePayroll(
+    public SalaryStatementDTO updatePayroll(
             @RequestBody UpdatePayrollRequestDTO req) {
         return payrollService.updatePayroll(req);
     }
 
     @GetMapping("/getUserPayrolls")
-    public List<SalaryStatementDO> getUserPayrolls(
+    public List<SalaryStatementDTO> getUserPayrolls(
             @RequestParam Long currentUserId,
             @RequestParam Long userId) {
         return payrollService.getUserPayrolls(currentUserId, userId);

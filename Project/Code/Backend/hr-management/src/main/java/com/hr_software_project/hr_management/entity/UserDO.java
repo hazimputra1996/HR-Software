@@ -40,6 +40,8 @@ public class UserDO {
     private String epf_number;
     private String socso_number;
     private String income_tax_number;
+    private String registrationNumber;
+    private String employeeNumber;
     private Date hire_date;
 
     private Integer leave_balance = 0;

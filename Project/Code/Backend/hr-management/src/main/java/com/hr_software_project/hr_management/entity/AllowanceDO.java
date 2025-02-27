@@ -1,5 +1,6 @@
 package com.hr_software_project.hr_management.entity;
 
+import com.hr_software_project.hr_management.enums.DeductionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,8 +27,11 @@ public class AllowanceDO {
 
     private String name;
     private Boolean oneTimeBonus;
-    private Integer amount;
-    private String allowanceType;
+    private Double amount;
+
+    @Enumerated(EnumType.STRING)
+    private DeductionType allowanceType;
+
     private Date dateStarted;
     private Date dateEnded;
     private String remarks;

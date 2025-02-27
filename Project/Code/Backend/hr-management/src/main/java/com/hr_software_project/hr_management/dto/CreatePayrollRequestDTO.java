@@ -14,6 +14,7 @@ public class CreatePayrollRequestDTO {
     private Date date;
     private Long userId;
     private Long currentUserId;
+    private String remarks;
 }
 
 

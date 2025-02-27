@@ -22,16 +22,7 @@ public class SalaryStatementDO {
     private UserDO user;
 
     private Date statementDate;
-    private Double baseSalary;
-    private Double bonuses = 0.0;
-    private Double allowances = 0.0;
-    private Double overtimePay = 0.0;
-
-    @Column(columnDefinition = "DECIMAL(10,2) GENERATED ALWAYS AS (base_salary + bonuses + allowances + overtime_pay) STORED")
-    private Double grossSalary;
-
-    private Double netSalary;
-    private Double totalDeductions;
+    private Double base_salary;
     private String remarks;
 }
 

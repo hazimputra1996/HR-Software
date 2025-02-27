@@ -16,7 +16,8 @@ public enum ServiceErrorCodes implements ErrorCase {
     OVERTIME_NOT_FOUND(404, ErrorMessages.getCode("overtime.404")),
     PUBLIC_HOLIDAY_NOT_FOUND(404, ErrorMessages.getCode("public_holiday.404")),
     LEAVE_NOT_FOUND(404, ErrorMessages.getCode("leave.404")),
-    ALLOWANCE_NOT_FOUND(404, ErrorMessages.getCode("allowance.404"));
+    ALLOWANCE_NOT_FOUND(404, ErrorMessages.getCode("allowance.404")),
+    COMPANY_NOT_FOUND(404, ErrorMessages.getCode("company.404"));
 
     private int errorCode;
     private String errorMessage;

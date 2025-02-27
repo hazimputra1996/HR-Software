@@ -34,6 +34,5 @@ public class SalaryStatementAllowanceDO {
 
     private String name;
     private Double amount;
-    private String remarks;
 }
 

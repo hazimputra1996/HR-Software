@@ -18,7 +18,8 @@ public class DeductionDO {
 
     private String name; // EPF, SOCSO, etc.
 
-    private String deductionType; // Percentage or Fixed
+    @Enumerated(EnumType.STRING)
+    private DeductionType deductionType; // Percentage or Fixed
 
     private Double rate;
     private Double maxLimit;

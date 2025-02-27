@@ -61,6 +61,8 @@ public class UserServiceImpl implements UserService {
         user.setLeave_balance(req.getLeaveBalance());
         user.setDaily_working_hours(req.getDaily_working_hours());
         user.setNumber_of_working_days_per_week(req.getNumber_of_working_days_per_week());
+        user.setEmployeeNumber(req.getEmployeeNumber());
+        user.setRegistrationNumber(req.getRegistrationNumber());
 
         try {
             user.setHire_date(new SimpleDateFormat("yyyy-MM-dd").parse(req.getHireDate()));

@@ -2,6 +2,7 @@ package com.hr_software_project.hr_management.method;
 
 import com.hr_software_project.hr_management.dto.*;
 import com.hr_software_project.hr_management.entity.*;
+import com.hr_software_project.hr_management.enums.DeductionType;
 import com.hr_software_project.hr_management.enums.Role;
 import com.hr_software_project.hr_management.error.ServiceErrorCodes;
 import com.hr_software_project.hr_management.error.ServiceException;
@@ -48,21 +49,35 @@ public class PayrollServiceImpl implements PayrollService {
     private SalaryStatementEmployerDeductionRepository salaryStatementEmployerDeductionRepository;
     @Autowired
     private EmployerDeductionRepository employerDeductionRepository;
+    @Autowired
+    private CompanyServiceImpl companyServiceImpl;
 
-public SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId) {
-    UserDO currentUser = userRepository.findById(currentUserId)
-        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
-    SalaryStatementDO payroll = salaryStatementRepository.findById(payrollId)
-        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+    public SalaryStatementDTO getPayrollDetail(Long currentUserId, Long payrollId) {
+        UserDO currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+        SalaryStatementDO payroll = salaryStatementRepository.findById(payrollId)
+                .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
-    if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(payroll.getUser().getId())) {
-        return payroll;
-    } else {
-        throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(payroll.getUser().getId())) {
+
+            SalaryStatementDTO result = new SalaryStatementDTO();
+
+            CompanyDO companyDetails = companyServiceImpl.getCompanyDetails();
+
+            List<SalaryStatementEmployerDeductionDO> employerDeductionsDOs = salaryStatementEmployerDeductionRepository.findByUser_Id(payroll.getUser().getId());
+            List<SalaryStatementAllowanceDO> allowancesDO = salaryStatementAllowanceRepository.findByUser_Id(payroll.getUser().getId());
+            List<SalaryStatementEmployeeDeductionDO> employeeDeductionDOS = salaryStatementEmployeeDeductionRepository.findByUser_Id(payroll.getUser().getId());
+            List<SalaryStatementOvertimeDO> overtimesDOs = salaryStatementOvertimeRepository.findByUser_Id(payroll.getUser().getId());
+
+
+
+            return result;
+        } else {
+            throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+        }
     }
-}
 
-    public SalaryStatementDO createPayroll(CreatePayrollRequestDTO req){
+    public SalaryStatementDTO createPayroll(CreatePayrollRequestDTO req){
         UserDO currentUser = userRepository.findById(req.getCurrentUserId())
                 .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
@@ -70,6 +85,15 @@ public SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId) {
         if (currentUser.getRole().equals(Role.ADMIN)){
             UserDO user = userRepository.findById(req.getUserId())
                     .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+
+            Double baseSalary = user.getSalary();
+            SalaryStatementDO payroll = new SalaryStatementDO();
+            payroll.setUser(user);
+            payroll.setRemarks(req.getRemarks());
+            payroll.setBase_salary(baseSalary);
+            payroll.setStatementDate(req.getDate());
+
+            payroll = salaryStatementRepository.save(payroll);
 
             List<AllowanceDO> allowances = allowanceRepository.findByUser_Id(req.getUserId());
             List<UserDeductionDO> employeeDeductions = userDeductionRepository.findByUser_Id(req.getUserId());
@@ -104,17 +128,88 @@ public SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId) {
 
             List<SalaryStatementAllowanceDO> salaryStatementAllowances = new ArrayList<>();
             List<SalaryStatementEmployeeDeductionDO> salaryStatementEmployeeDeductions = new ArrayList<>();
-            List<SalaryStatementEmployerDeductionDO> salaryStatementEmployers = new ArrayList<>();
+            List<SalaryStatementEmployerDeductionDO> salaryStatementEmployerDeductions = new ArrayList<>();
             List<SalaryStatementOvertimeDO> salaryStatementOvertimes = new ArrayList<>();
 
-            return null;
+            SalaryStatementDO finalPayroll = payroll;
+            allowances.forEach(allowance -> {
+                SalaryStatementAllowanceDO salaryStatementAllowance = new SalaryStatementAllowanceDO();
+
+                switch (allowance.getAllowanceType()) {
+                    case DeductionType.FIXED -> salaryStatementAllowance.setAmount(allowance.getAmount());
+                    case DeductionType.PERCENTAGE -> salaryStatementAllowance.setAmount(allowance.getAmount() * baseSalary);
+                }
+
+                salaryStatementAllowance.setUser(user);
+                salaryStatementAllowance.setName(allowance.getName());
+                salaryStatementAllowance.setAllowance(allowance);
+                salaryStatementAllowance.setSalaryStatement(finalPayroll);
+
+                salaryStatementAllowances.add(salaryStatementAllowance);
+
+
+            });
+
+            employeeDeductions.forEach(employeeDeduction -> {
+                SalaryStatementEmployeeDeductionDO salaryStatementEmployeeDeduction = new SalaryStatementEmployeeDeductionDO();
+
+                switch (employeeDeduction.getDeduction().getDeductionType()){
+                    case DeductionType.FIXED -> salaryStatementEmployeeDeduction.setAmount(employeeDeduction.getAmount());
+                    case DeductionType.PERCENTAGE -> salaryStatementEmployeeDeduction.setAmount(employeeDeduction.getAmount() * baseSalary);
+                }
+
+                salaryStatementEmployeeDeduction.setUser(user);
+                salaryStatementEmployeeDeduction.setDeduction(employeeDeduction.getDeduction());
+                salaryStatementEmployeeDeduction.setSalaryStatement(finalPayroll);
+                salaryStatementEmployeeDeduction.setName(salaryStatementEmployeeDeduction.getDeduction().getName());
+
+                salaryStatementEmployeeDeductions.add(salaryStatementEmployeeDeduction);
+
+            });
+            employerDeductions.forEach(employerDeduction -> {
+                SalaryStatementEmployerDeductionDO salaryStatementEmployerDeduction = new SalaryStatementEmployerDeductionDO();
+
+                switch (employerDeduction.getDeduction().getDeductionType()){
+                    case DeductionType.FIXED -> salaryStatementEmployerDeduction.setAmount(employerDeduction.getAmount());
+                    case DeductionType.PERCENTAGE -> salaryStatementEmployerDeduction.setAmount(employerDeduction.getAmount() * baseSalary);
+                }
+
+                salaryStatementEmployerDeduction.setUser(user);
+                salaryStatementEmployerDeduction.setDeduction(employerDeduction.getDeduction());
+                salaryStatementEmployerDeduction.setSalaryStatement(finalPayroll);
+                salaryStatementEmployerDeduction.setName(salaryStatementEmployerDeduction.getDeduction().getName());
+
+                salaryStatementEmployerDeductions.add(salaryStatementEmployerDeduction);
+
+
+            });
+
+            overtime.forEach(overtimeDO -> {
+                SalaryStatementOvertimeDO salaryStatementOvertime = new SalaryStatementOvertimeDO();
+
+                salaryStatementOvertime.setUser(user);
+                salaryStatementOvertime.setAmount(overtimeDO.getTotalOvertimePrice());
+                salaryStatementOvertime.setOvertime(overtimeDO);
+                salaryStatementOvertime.setSalaryStatement(finalPayroll);
+                salaryStatementOvertime.setRemarks(overtimeDO.getRemarks());
+
+                salaryStatementOvertimes.add(salaryStatementOvertime);
+
+            });
+
+            salaryStatementAllowanceRepository.saveAll(salaryStatementAllowances);
+            salaryStatementEmployeeDeductionRepository.saveAll(salaryStatementEmployeeDeductions);
+            salaryStatementEmployerDeductionRepository.saveAll(salaryStatementEmployerDeductions);
+            salaryStatementOvertimeRepository.saveAll(salaryStatementOvertimes);
+
+            return getPayrollDetail(req.getCurrentUserId(), finalPayroll.getId());
 
         } else {
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
         }
     }
 
-    public SalaryStatementDO updatePayroll(UpdatePayrollRequestDTO req) {
+    public SalaryStatementDTO updatePayroll(UpdatePayrollRequestDTO req) {
     UserDO currentUser = userRepository.findById(req.getCurrentUserId())
         .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
@@ -122,31 +217,27 @@ public SalaryStatementDO getPayrollDetail(Long currentUserId, Long payrollId) {
         SalaryStatementDO payroll = salaryStatementRepository.findById(req.getId())
             .orElseThrow(() -> new ServiceException(ServiceErrorCodes.PAYROLL_NOT_FOUND));
 
-        payroll.setBaseSalary(req.getBaseSalary());
-        payroll.setBonuses(req.getBonuses());
-        payroll.setAllowances(req.getAllowances());
-        payroll.setOvertimePay(req.getOvertimePay());
-        payroll.setGrossSalary(req.getGrossSalary());
-        payroll.setNetSalary(req.getNetSalary());
-        payroll.setTotalDeductions(req.getTotalDeductions());
-        payroll.setRemarks(req.getRemarks());
-        return salaryStatementRepository.save(payroll);
+        payroll.setRemarks(req.getRemarks()); // can edit remarks only
+        salaryStatementRepository.save(payroll);
+
+        return getPayrollDetail(req.getCurrentUserId(), payroll.getId());
     } else {
         throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
     }
 }
 
-    public List<SalaryStatementDO> getUserPayrolls(Long currentUserId, Long userId) {
-    UserDO currentUser = userRepository.findById(currentUserId)
-        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
-    UserDO user = userRepository.findById(userId)
-        .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
+    public List<SalaryStatementDTO> getUserPayrolls(Long currentUserId, Long userId) {
 
-    if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getId().equals(user.getId())) {
-        return salaryStatementRepository.findByUser_Id(userId);
-    } else {
-        throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
-    }
+    List<SalaryStatementDTO> finalPayrolls = new ArrayList<>();
+
+    List<SalaryStatementDO> payrolls = salaryStatementRepository.findByUser_Id(userId);
+
+    payrolls.forEach(finalPayroll -> {
+        finalPayrolls.add(getPayrollDetail(currentUserId, finalPayroll.getId()));
+    });
+
+    return finalPayrolls;
+
 }
 
     public DeductionDO createDeduction(CreateDeductionRequestDTO req){

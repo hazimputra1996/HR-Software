@@ -21,6 +21,8 @@ public class CreateUserRequestDTO {
     private String epfNumber;
     private String socsoNumber;
     private String incomeTaxNumber;
+    private String registrationNumber;
+    private String employeeNumber;
     private String hireDate;
     private Integer leaveBalance;
     private Long supervisorId;

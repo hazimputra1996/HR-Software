@@ -32,7 +32,6 @@ public class SalaryStatementOvertimeDO {
     @JoinColumn(name = "salary_statement_id", nullable = false)
     private SalaryStatementDO salaryStatement;
 
-    private String name;
     private Double amount;
     private String remarks;
 }

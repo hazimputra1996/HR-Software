@@ -32,6 +32,5 @@ public class SalaryStatementEmployeeDeductionDO {
 
     private String name;
     private Double amount;
-    private String remarks;
 }
 

@@ -28,7 +28,7 @@ public class CreateCompanyRequestDTO {
     private String companyWebsite;
     private String companyFaxNumber;
     private Long currentUserId;
-    private String cutOffDate;
+    private Integer cutOffDate;
 
 }
 

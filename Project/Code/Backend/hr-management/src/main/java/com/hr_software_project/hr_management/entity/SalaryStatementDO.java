@@ -22,6 +22,8 @@ public class SalaryStatementDO {
     private UserDO user;
 
     private Date statementDate;
+    private Date startDate;
+    private Date endDate;
     private Double base_salary;
     private String remarks;
 }

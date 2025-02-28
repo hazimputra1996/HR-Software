@@ -30,5 +30,5 @@ public class CompanyDO {
     private String companyWebsite;
     private String companyFaxNumber;
     private String status;
-    private String cutOffDate;
+    private Integer cutOffDate;
 }

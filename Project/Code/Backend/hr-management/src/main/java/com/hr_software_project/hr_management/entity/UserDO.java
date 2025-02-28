@@ -35,7 +35,7 @@ public class UserDO {
 
     private Double salary;
     private Double daily_working_hours;
-    private Double number_of_working_days_per_week;
+    private Integer number_of_working_days_per_week;
 
     private String epf_number;
     private String socso_number;

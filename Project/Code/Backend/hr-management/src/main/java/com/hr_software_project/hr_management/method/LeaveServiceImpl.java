@@ -152,6 +152,8 @@ public class LeaveServiceImpl implements LeaveService {
         Date hired_date = userDetails.getHire_date();
         Date current_date = new Date();
 
+        Integer weeklyWorkingDays = userDetails.getNumber_of_working_days_per_week();
+
         Long monthsWorking = DateUtils.getMonthsBetween(hired_date, current_date);
 
         leaveType = leaveType.stream()
@@ -168,10 +170,10 @@ public class LeaveServiceImpl implements LeaveService {
             AtomicReference<Long> totalUsed = new AtomicReference<>(Long.valueOf(0));
             leaveList.forEach(leaveDO -> {
                 if (leaveDO.getEndDate().after(current_date)) {
-                    totalUsed.set(totalUsed.get() + daysLeaveTaken(leaveDO.getStartDate(), current_date));
+                    totalUsed.set(totalUsed.get() + daysLeaveTaken(leaveDO.getStartDate(), current_date, weeklyWorkingDays));
 
                 } else {
-                    totalUsed.set(totalUsed.get() + daysLeaveTaken(leaveDO.getStartDate(), leaveDO.getEndDate()));
+                    totalUsed.set(totalUsed.get() + daysLeaveTaken(leaveDO.getStartDate(), leaveDO.getEndDate(), weeklyWorkingDays));
                 }
             });
 
@@ -183,12 +185,12 @@ public class LeaveServiceImpl implements LeaveService {
         return response;
     }
 
-    public Long daysLeaveTaken(Date startDate, Date endDate){
+    public Long daysLeaveTaken(Date startDate, Date endDate, Integer weeklyWorkingDays){
 
         List<PublicHolidayDO> allPublicHoliday = new ArrayList<>(publicHolidayRepository.findByDateBetween(startDate, endDate));
 
         // Find the days between startDate and endDate excluding weekends and public holidays
-        return DateUtils.getWorkingDaysBetween(startDate, endDate, allPublicHoliday);
+        return DateUtils.getWorkingDaysBetween(startDate, endDate, allPublicHoliday, false, false, weeklyWorkingDays);
     }
 
     public List<LeaveCarryForwardDO> carryForwardLeave(Long currentUserId, Long userId, Integer year){
@@ -213,6 +215,8 @@ public class LeaveServiceImpl implements LeaveService {
                 .map(LeaveCarryForwardDO::getCarriedDays)
                 .reduce(0, Integer::sum);
 
+        Integer weeklyWorkingDays = user.getNumber_of_working_days_per_week();
+
 
 
         leaveType.forEach(leaveTypeDO -> {
@@ -233,7 +237,7 @@ public class LeaveServiceImpl implements LeaveService {
 
                 }
 
-                totalUsed.set(totalUsed.get() + daysLeaveTaken(startDate, endDate));
+                totalUsed.set(totalUsed.get() + daysLeaveTaken(startDate, endDate, weeklyWorkingDays));
             });
 
             Integer balance = (int) (leaveTypeDO.getMaxDays() + totalCarryForwardLastYear - totalUsed.get());

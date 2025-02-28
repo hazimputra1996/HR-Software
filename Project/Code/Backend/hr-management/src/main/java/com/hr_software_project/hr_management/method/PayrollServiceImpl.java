@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,13 +70,71 @@ public class PayrollServiceImpl implements PayrollService {
             List<SalaryStatementEmployeeDeductionDO> employeeDeductionDOS = salaryStatementEmployeeDeductionRepository.findByUser_Id(payroll.getUser().getId());
             List<SalaryStatementOvertimeDO> overtimesDOs = salaryStatementOvertimeRepository.findByUser_Id(payroll.getUser().getId());
 
+            Double totalAllowances = allowancesDO.stream().mapToDouble(SalaryStatementAllowanceDO::getAmount).sum();
+            Double totalEmployeeDeductions = employeeDeductionDOS.stream().mapToDouble(SalaryStatementEmployeeDeductionDO::getAmount).sum();
+            Double totalEmployerDeductions = employerDeductionsDOs.stream().mapToDouble(SalaryStatementEmployerDeductionDO::getAmount).sum();
+            Double totalOvertimes = overtimesDOs.stream().mapToDouble(SalaryStatementOvertimeDO::getAmount).sum();
 
+            Double grossSalary = payroll.getBase_salary() + totalAllowances + totalOvertimes;
+            Double totalDeductions = totalEmployeeDeductions;
+            Double netSalary = grossSalary - totalDeductions;
+
+            result.setPayrollId(payroll.getId().toString());
+            result.setCompanyName(companyDetails.getCompanyName());
+            result.setCompanyRegistrationNumber(companyDetails.getCompanyRegistrationNumber());
+            result.setCompanyNumber(companyDetails.getCompanyNumber());
+            result.setEmployeeName(payroll.getUser().getFirst_name() + " " + payroll.getUser().getLast_name());
+            result.setEmployeeRegistrationNumber(payroll.getUser().getRegistrationNumber());
+            result.setEmployeeNumber(payroll.getUser().getEmployeeNumber());
+            result.setEpfNumber(payroll.getUser().getEpf_number());
+            result.setDateFrom(payroll.getStartDate());
+            result.setDateTo(payroll.getEndDate());
+            result.setStatementDate(payroll.getStatementDate());
+            result.setIncomeTaxNumber(payroll.getUser().getIncome_tax_number());
+
+            result.setEmployerDeductions(employerDeductionsDOs.stream().map(employerDeductionDO -> {
+                SalaryStatementDTO.EmployerDeductionDTO employerDeductionDTO = new SalaryStatementDTO.EmployerDeductionDTO();
+                employerDeductionDTO.setName(employerDeductionDO.getName());
+                employerDeductionDTO.setDescription(employerDeductionDO.getDeduction().getDescription());
+                employerDeductionDTO.setAmount(employerDeductionDO.getAmount());
+                return employerDeductionDTO;
+            }).collect(Collectors.toList()));
+
+            result.setEmployeeDeductions(employeeDeductionDOS.stream().map(employeeDeductionDO -> {
+                SalaryStatementDTO.EmployeeDeductionDTO employeeDeductionDTO = new SalaryStatementDTO.EmployeeDeductionDTO();
+                employeeDeductionDTO.setName(employeeDeductionDO.getName());
+                employeeDeductionDTO.setDescription(employeeDeductionDO.getDeduction().getDescription());
+                employeeDeductionDTO.setAmount(employeeDeductionDO.getAmount());
+                return employeeDeductionDTO;
+
+            }).collect(Collectors.toList()));
+
+            result.setAllowances(allowancesDO.stream().map(allowanceDO -> {
+                SalaryStatementDTO.AllowanceDTO allowanceDTO = new SalaryStatementDTO.AllowanceDTO();
+                allowanceDTO.setName(allowanceDO.getName());
+                allowanceDTO.setDescription(allowanceDO.getAllowance().getRemarks());
+                allowanceDTO.setAmount(allowanceDO.getAmount());
+                return allowanceDTO;
+            }).collect(Collectors.toList()));
+
+            Double totalOvertimeHours = overtimesDOs.stream().mapToDouble(overtimeDO -> overtimeDO.getOvertime().getHoursWorked()).sum();
+            Double totalOvertimeAmount = overtimesDOs.stream().mapToDouble(SalaryStatementOvertimeDO::getAmount).sum();
+            String overtimeDescription = "Total Overtime Hours: " + totalOvertimeHours;
+
+            result.setOvertimes(new SalaryStatementDTO.OvertimeDTO("Overtime",overtimeDescription, totalOvertimeAmount));
+            result.setBaseSalary(payroll.getBase_salary());
+            result.setGrossSalary(grossSalary);
+            result.setTotalDeductions(totalDeductions);
+            result.setNetSalary(netSalary);
+            result.setRemarks(payroll.getRemarks());
 
             return result;
         } else {
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
         }
     }
+
+
 
     public SalaryStatementDTO createPayroll(CreatePayrollRequestDTO req){
         UserDO currentUser = userRepository.findById(req.getCurrentUserId())
@@ -86,13 +145,33 @@ public class PayrollServiceImpl implements PayrollService {
             UserDO user = userRepository.findById(req.getUserId())
                     .orElseThrow(() -> new ServiceException(ServiceErrorCodes.USER_NOT_FOUND));
 
+            CompanyDO companyDetails = companyServiceImpl.getCompanyDetails();
+            Integer cuttOffDay = companyDetails.getCutOffDate();
+
             Double baseSalary = user.getSalary();
             SalaryStatementDO payroll = new SalaryStatementDO();
             payroll.setUser(user);
             payroll.setRemarks(req.getRemarks());
-            payroll.setBase_salary(baseSalary);
             payroll.setStatementDate(req.getDate());
 
+            Date startDate = DateUtils.getStartDateBasedCutOff(req.getDate(), cuttOffDay);
+            Date endDate = DateUtils.getEndDateBasedCutOff(req.getDate(), cuttOffDay);
+            Date userHiredDate = user.getHire_date();
+            Date userStartDate = startDate;
+
+            if (startDate.after(userHiredDate)) {
+                startDate = user.getHire_date();
+
+                Integer numberOfWorkingDaysPerWeek = user.getNumber_of_working_days_per_week();
+                Long workingDays = DateUtils.getWorkingDaysBetween(startDate, endDate, new ArrayList<>(), true, true, numberOfWorkingDaysPerWeek);
+                Double dailySalary = baseSalary / 30;
+                Double monthlySalary = dailySalary * workingDays;
+                baseSalary = monthlySalary;
+            }
+
+            payroll.setStartDate(startDate);
+            payroll.setEndDate(endDate);
+            payroll.setBase_salary(baseSalary);
             payroll = salaryStatementRepository.save(payroll);
 
             List<AllowanceDO> allowances = allowanceRepository.findByUser_Id(req.getUserId());
@@ -132,12 +211,13 @@ public class PayrollServiceImpl implements PayrollService {
             List<SalaryStatementOvertimeDO> salaryStatementOvertimes = new ArrayList<>();
 
             SalaryStatementDO finalPayroll = payroll;
+            Double finalBaseSalary = baseSalary;
             allowances.forEach(allowance -> {
                 SalaryStatementAllowanceDO salaryStatementAllowance = new SalaryStatementAllowanceDO();
 
                 switch (allowance.getAllowanceType()) {
                     case DeductionType.FIXED -> salaryStatementAllowance.setAmount(allowance.getAmount());
-                    case DeductionType.PERCENTAGE -> salaryStatementAllowance.setAmount(allowance.getAmount() * baseSalary);
+                    case DeductionType.PERCENTAGE -> salaryStatementAllowance.setAmount(allowance.getAmount() * finalBaseSalary);
                 }
 
                 salaryStatementAllowance.setUser(user);
@@ -150,12 +230,13 @@ public class PayrollServiceImpl implements PayrollService {
 
             });
 
+            Double finalBaseSalary1 = baseSalary;
             employeeDeductions.forEach(employeeDeduction -> {
                 SalaryStatementEmployeeDeductionDO salaryStatementEmployeeDeduction = new SalaryStatementEmployeeDeductionDO();
 
                 switch (employeeDeduction.getDeduction().getDeductionType()){
                     case DeductionType.FIXED -> salaryStatementEmployeeDeduction.setAmount(employeeDeduction.getAmount());
-                    case DeductionType.PERCENTAGE -> salaryStatementEmployeeDeduction.setAmount(employeeDeduction.getAmount() * baseSalary);
+                    case DeductionType.PERCENTAGE -> salaryStatementEmployeeDeduction.setAmount(employeeDeduction.getAmount() * finalBaseSalary1);
                 }
 
                 salaryStatementEmployeeDeduction.setUser(user);
@@ -166,12 +247,13 @@ public class PayrollServiceImpl implements PayrollService {
                 salaryStatementEmployeeDeductions.add(salaryStatementEmployeeDeduction);
 
             });
+            Double finalBaseSalary2 = baseSalary;
             employerDeductions.forEach(employerDeduction -> {
                 SalaryStatementEmployerDeductionDO salaryStatementEmployerDeduction = new SalaryStatementEmployerDeductionDO();
 
                 switch (employerDeduction.getDeduction().getDeductionType()){
                     case DeductionType.FIXED -> salaryStatementEmployerDeduction.setAmount(employerDeduction.getAmount());
-                    case DeductionType.PERCENTAGE -> salaryStatementEmployerDeduction.setAmount(employerDeduction.getAmount() * baseSalary);
+                    case DeductionType.PERCENTAGE -> salaryStatementEmployerDeduction.setAmount(employerDeduction.getAmount() * finalBaseSalary2);
                 }
 
                 salaryStatementEmployerDeduction.setUser(user);
@@ -379,7 +461,7 @@ public class PayrollServiceImpl implements PayrollService {
 
             Double salary = user.getSalary();
             Double dailyWorkingHours = user.getDaily_working_hours();
-            Double numberOfWorkingDaysPerWeek = user.getNumber_of_working_days_per_week();
+            Integer numberOfWorkingDaysPerWeek = user.getNumber_of_working_days_per_week();
 
             Double hourlyRate = salary / (dailyWorkingHours * numberOfWorkingDaysPerWeek * 4.33); // 4.33 is the average number of weeks in a month
             Double overtimeRate = hourlyRate * req.getRate();
@@ -415,7 +497,7 @@ public class PayrollServiceImpl implements PayrollService {
 
             Double salary = user.getSalary();
             Double dailyWorkingHours = user.getDaily_working_hours();
-            Double numberOfWorkingDaysPerWeek = user.getNumber_of_working_days_per_week();
+            Integer numberOfWorkingDaysPerWeek = user.getNumber_of_working_days_per_week();
 
             Double hourlyRate = salary / (dailyWorkingHours * numberOfWorkingDaysPerWeek * 4.33); // 4.33 is the average number of weeks in a month
             Double overtimeRate = hourlyRate * req.getRate();

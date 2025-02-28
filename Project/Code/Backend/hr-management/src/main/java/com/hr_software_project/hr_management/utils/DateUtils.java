@@ -37,7 +37,7 @@ public class DateUtils {
         return valueToCheck >= minValue && valueToCheck <= maxValue;
     }
 
-    public static Long getWorkingDaysBetween(Date startDate, Date endDate, List<PublicHolidayDO> allPublicHoliday) {
+    public static Long getWorkingDaysBetween(Date startDate, Date endDate, List<PublicHolidayDO> allPublicHoliday, Boolean includePublicHoliday, Boolean includeWeekend, Integer weeklyWorkingDays) {
         if (startDate == null || endDate == null) {
             throw new ServiceException(ServiceErrorCodes.DATE_NULL);
         }
@@ -50,12 +50,19 @@ public class DateUtils {
         LocalDate localStartDate = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate localEndDate = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
+        if (includeWeekend) {
+            weeklyWorkingDays = 7;
+        }
         while (!localStartDate.isAfter(localEndDate)) {
-            if (localStartDate.getDayOfWeek().getValue() < 6) {
+            if (localStartDate.getDayOfWeek().getValue() < weeklyWorkingDays+1) {
                 workingDays++;
             }
 
             localStartDate = localStartDate.plusDays(1);
+        }
+
+        if (includePublicHoliday) {
+            return workingDays;
         }
 
         for (PublicHolidayDO publicHoliday : allPublicHoliday) {
@@ -79,6 +86,32 @@ public class DateUtils {
 
         long diff = endTime.getTime() - startTime.getTime();
         return (double) diff / (60 * 60 * 1000);
+    }
+
+    public static Date getStartDateBasedCutOff(Date statementDate, Integer cuttOffDay){
+        if (statementDate == null || cuttOffDay == null) {
+            throw new ServiceException(ServiceErrorCodes.DATE_NULL);
+        }
+
+        LocalDate localStatementDate = statementDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        // Based on localStatementDate, find last month's date based on cuttOffDay
+        LocalDate localStartDate = localStatementDate.minusMonths(1).withDayOfMonth(cuttOffDay);
+
+        return Date.from(localStartDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+    }
+
+    public static Date getEndDateBasedCutOff(Date statementDate, Integer cuttOffDay){
+        if (statementDate == null || cuttOffDay == null) {
+            throw new ServiceException(ServiceErrorCodes.DATE_NULL);
+        }
+
+        LocalDate localStatementDate = statementDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        // Based on localStatementDate, find last month's date based on cuttOffDay
+        LocalDate localStartDate = localStatementDate.withDayOfMonth(cuttOffDay).minusDays(1);
+
+        return Date.from(localStartDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
     }
 
 

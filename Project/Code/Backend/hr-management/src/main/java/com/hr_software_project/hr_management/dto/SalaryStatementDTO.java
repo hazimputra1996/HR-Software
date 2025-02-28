@@ -1,9 +1,6 @@
 package com.hr_software_project.hr_management.dto;
 
-import com.hr_software_project.hr_management.entity.UserDO;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -31,7 +28,7 @@ public class SalaryStatementDTO {
     private List<EmployerDeductionDTO> employerDeductions;
     private List<EmployeeDeductionDTO> employeeDeductions;
     private List<AllowanceDTO> allowances;
-    private List<OvertimeDTO> overtimes;
+    private OvertimeDTO overtimes;
     private Double baseSalary;
     private Double grossSalary;
     private double totalDeductions;
@@ -46,7 +43,7 @@ public class SalaryStatementDTO {
     public static class EmployerDeductionDTO {
         private String name;
         private String description;
-        private String amount;
+        private Double amount;
 
     }
 
@@ -56,7 +53,7 @@ public class SalaryStatementDTO {
     public static class EmployeeDeductionDTO {
         private String name;
         private String description;
-        private String amount;
+        private Double amount;
 
     }
 
@@ -66,7 +63,7 @@ public class SalaryStatementDTO {
     public static class AllowanceDTO {
         private String name;
         private String description;
-        private String amount;
+        private Double amount;
 
     }
 
@@ -76,7 +73,7 @@ public class SalaryStatementDTO {
     public static class OvertimeDTO {
         private String name;
         private String description;
-        private String amount;
+        private Double amount;
 
     }
 }

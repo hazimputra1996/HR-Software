@@ -3,10 +3,24 @@ package com.hr_software_project.hr_management.controller;
 import com.hr_software_project.hr_management.dto.*;
 import com.hr_software_project.hr_management.entity.*;
 import com.hr_software_project.hr_management.service.PayrollService;
+
+import net.sf.jasperreports.engine.JRException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
 
 @RestController
 @RequestMapping("/api/payroll")
@@ -14,6 +28,10 @@ public class PayrollController {
 
     @Autowired
     private PayrollService payrollService;
+
+    @Autowired
+    private DataSource dataSource;
+
 
 
     @GetMapping("/getPayrollDetail")
@@ -192,6 +210,28 @@ public class PayrollController {
             @RequestParam Long currentUserId,
             @RequestParam Long allowanceId) {
         payrollService.deleteAllowance(currentUserId, allowanceId);
+    }
+
+
+    @GetMapping("/generate-pdf-db")
+    public ResponseEntity<byte[]> generatePdfFromDb(
+            @RequestParam Long currentUserId,
+            @RequestParam Long payrollId,
+            @RequestParam String reportName) {
+        try {
+
+            // Get PostgreSQL DB connection
+            try (Connection connection = dataSource.getConnection()) {
+                byte[] pdfData = payrollService.generateSalarySlip(currentUserId, payrollId, reportName, connection);
+
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + reportName + ".pdf")
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .body(pdfData);
+            }
+        } catch (RuntimeException | SQLException | JRException e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
     }
 
 }

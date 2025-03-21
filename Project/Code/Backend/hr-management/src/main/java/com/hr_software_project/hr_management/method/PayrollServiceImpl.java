@@ -10,14 +10,21 @@ import com.hr_software_project.hr_management.repository.*;
 import com.hr_software_project.hr_management.service.PayrollService;
 import com.hr_software_project.hr_management.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.sql.Connection;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -52,6 +59,8 @@ public class PayrollServiceImpl implements PayrollService {
     private EmployerDeductionRepository employerDeductionRepository;
     @Autowired
     private CompanyServiceImpl companyServiceImpl;
+    @Autowired
+    private JrxmlRepository jrxmlRepository;
 
     public SalaryStatementDTO getPayrollDetail(Long currentUserId, Long payrollId) {
         UserDO currentUser = userRepository.findById(currentUserId)
@@ -706,6 +715,57 @@ public class PayrollServiceImpl implements PayrollService {
         } else {
             throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
         }
+    }
+
+    public byte[] generateSalarySlip(Long currentUserId, Long payrollId, String reportType, Connection connection) throws JRException {
+
+        SalaryStatementDTO salaryStatementDetails = getPayrollDetail(currentUserId,payrollId);
+
+
+        // Create the parameters for the report
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("companyName", salaryStatementDetails.getCompanyName());
+        parameters.put("companyRegistrationNumber", salaryStatementDetails.getCompanyRegistrationNumber());
+        parameters.put("companyNumber", salaryStatementDetails.getCompanyNumber());
+        parameters.put("employeeName", salaryStatementDetails.getEmployeeName());
+        parameters.put("employeeRegistrationNumber", salaryStatementDetails.getEmployeeRegistrationNumber());
+        parameters.put("employeeNumber", salaryStatementDetails.getEmployeeNumber());
+        parameters.put("epfNumber", salaryStatementDetails.getEpfNumber());
+        parameters.put("dateFrom", salaryStatementDetails.getDateFrom());
+        parameters.put("dateTo", salaryStatementDetails.getDateTo());
+        parameters.put("statementDate", salaryStatementDetails.getStatementDate());
+        parameters.put("incomeTaxNumber", salaryStatementDetails.getIncomeTaxNumber());
+        parameters.put("baseSalary", salaryStatementDetails.getBaseSalary());
+        parameters.put("grossSalary", salaryStatementDetails.getGrossSalary());
+        parameters.put("totalDeductions", salaryStatementDetails.getTotalDeductions());
+        parameters.put("netSalary", salaryStatementDetails.getNetSalary());
+        parameters.put("remarks", salaryStatementDetails.getRemarks());
+
+        parameters.put("overtime", salaryStatementDetails.getOvertimes());
+        parameters.put("allowances", salaryStatementDetails.getAllowances());
+        parameters.put("employeeDeductions", salaryStatementDetails.getEmployeeDeductions());
+        parameters.put("employerDeductions", salaryStatementDetails.getEmployerDeductions());
+
+        return generatePdfFromDb(reportType, connection, parameters);
+    }
+
+    public byte[] generatePdfFromDb(String reportType, Connection connection, Map<String, Object> parameters) throws JRException {
+        List<JrxmlDO> jrxmlEntity = jrxmlRepository.findByReportType(reportType);
+
+        if (jrxmlEntity.isEmpty()) {
+            throw new RuntimeException("JRXML file not found in database: " + reportType);
+        }
+
+        ByteArrayInputStream jrxmlStream = new ByteArrayInputStream(jrxmlEntity.getFirst().getReportData());
+
+        JasperReport jasperReport = JasperCompileManager.compileReport(jrxmlStream);
+
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, connection);
+
+        ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream();
+        JasperExportManager.exportReportToPdfStream(jasperPrint, pdfOutputStream);
+
+        return pdfOutputStream.toByteArray();
     }
 
 }

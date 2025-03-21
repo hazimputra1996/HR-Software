@@ -2,17 +2,22 @@ package com.hr_software_project.hr_management.method;
 
 import com.hr_software_project.hr_management.dto.CreateCompanyRequestDTO;
 import com.hr_software_project.hr_management.entity.CompanyDO;
+import com.hr_software_project.hr_management.entity.JrxmlDO;
 import com.hr_software_project.hr_management.entity.UserDO;
 import com.hr_software_project.hr_management.enums.Role;
 import com.hr_software_project.hr_management.error.ServiceErrorCodes;
 import com.hr_software_project.hr_management.error.ServiceException;
 import com.hr_software_project.hr_management.repository.CompanyRepository;
+import com.hr_software_project.hr_management.repository.JrxmlRepository;
 import com.hr_software_project.hr_management.repository.UserRepository;
 import com.hr_software_project.hr_management.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 
 
@@ -25,6 +30,8 @@ public class CompanyServiceImpl implements CompanyService {
     private UserRepository userRepository;
     @Autowired
     private CompanyRepository companyRepository;
+    @Autowired
+    private JrxmlRepository jrxmlRepository;
 
 
     public CompanyDO getCompanyDetails(){
@@ -86,6 +93,32 @@ public class CompanyServiceImpl implements CompanyService {
             companyRepository.deleteById(id);
         }
         throw new ServiceException(ServiceErrorCodes.UNAUTHORIZED);
+    }
+
+    public void saveJrxmlFile(MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Uploaded file is empty.");
+        }
+
+        JrxmlDO jrxmlEntity = new JrxmlDO();
+        jrxmlEntity.setReportName(file.getOriginalFilename());
+        jrxmlEntity.setReportType(file.getContentType());
+        jrxmlEntity.setReportData(file.getBytes());
+
+        jrxmlRepository.save(jrxmlEntity);
+    }
+
+    public List<JrxmlDO> getJrxmlFiles() {
+        return jrxmlRepository.findAll();
+    }
+
+    public void deleteJrxmlFile(String fileName) {
+        List<JrxmlDO> jrxmlEntity = jrxmlRepository.findByReportName(fileName);
+
+        if (!jrxmlEntity.isEmpty()) {
+            jrxmlRepository.deleteAll(jrxmlEntity);
+        }
+
     }
 
 }

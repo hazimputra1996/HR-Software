@@ -2,8 +2,10 @@ package com.hr_software_project.hr_management.service;
 
 import com.hr_software_project.hr_management.dto.*;
 import com.hr_software_project.hr_management.entity.*;
+import net.sf.jasperreports.engine.JRException;
 import org.springframework.stereotype.Service;
 
+import java.sql.Connection;
 import java.util.List;
 
 
@@ -39,6 +41,7 @@ public interface PayrollService {
     AllowanceDO updateAllowance(AllowanceDO req, Long currentUserId);
     List<AllowanceDO> getAllAllowanceDetailForUser(Long currentUserId, Long userId);
     void deleteAllowance(Long currentUserId, Long allowanceId);
+    public byte[] generateSalarySlip(Long currentUserId, Long payrollId, String reportType, Connection connection)  throws JRException;
 
 
 

@@ -77,6 +77,12 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Japer Report -->
+		<dependency>
+        <groupId>net.sf.jasperreports</groupId>
+        <artifactId>jasperreports</artifactId>
+        <version>6.20.0</version> <!-- Use the latest stable version -->
+    </dependency>
 	</dependencies>
 	<build>
 		<plugins>

@@ -203,3 +203,21 @@ CREATE TABLE IF NOT EXISTS user_deductions (
     ended_date DATE,
     amount DOUBLE PRECISION
 );
+
+-- Create Images Table 
+CREATE TABLE IF NOT EXISTS images (
+    id SERIAL PRIMARY KEY,
+    image_name VARCHAR(255) NOT NULL,
+    image_type VARCHAR(255) NOT NULL,  -- MIME Type
+    image_data BYTEA NOT NULL,  -- Stores Image file
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create jrxml Table
+CREATE TABLE IF NOT EXISTS jrxml (
+    id SERIAL PRIMARY KEY,
+    report_name VARCHAR(255) NOT NULL,
+    report_type VARCHAR(255) NOT NULL,  -- MIME Type
+    report_data BYTEA NOT NULL,  -- Stores Report file
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
